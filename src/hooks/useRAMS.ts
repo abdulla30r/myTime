@@ -187,6 +187,7 @@ export function useRAMS() {
     setSelectedTime,
     fetchAttendance,
     hasSavedEmployee,
+    savedEmployee,
     saveEmployee,
     clearSavedEmployee,
   };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRAMS } from '../hooks/useRAMS';
 import { useTimeDoctor } from '../hooks/useTimeDoctor';
 import { getTDNameForRAMS } from '../utils/employeeMap';
@@ -11,20 +11,19 @@ export function FetchPanel({ onApply }: FetchPanelProps) {
   const rams = useRAMS();
   const td = useTimeDoctor();
   const [fetching, setFetching] = useState(false);
+  const autoApplied = useRef(false); // prevent double-apply
 
   const isLoading = fetching || rams.status === 'loading' || td.status === 'loading';
 
   // ── Single fetch: RAMS + TD in parallel ──
   const handleFetch = async () => {
     setFetching(true);
-
+    autoApplied.current = false;
 
     // Wrap each in a settled promise so one failing doesn't block the other
     await Promise.allSettled([
       new Promise<void>((resolve) => {
-        rams.fetchAttendance(() => { /* no auto-apply yet */ });
-        // fetchAttendance is async internally but the hook updates state;
-        // we resolve immediately and rely on state updates
+        rams.fetchAttendance();
         resolve();
       }),
       new Promise<void>((resolve) => {
@@ -35,6 +34,21 @@ export function FetchPanel({ onApply }: FetchPanelProps) {
 
     setFetching(false);
   };
+
+  // ── Auto-apply saved employee once both RAMS + TD finish ──
+  useEffect(() => {
+    if (autoApplied.current) return;
+    if (!rams.hasSavedEmployee || !rams.savedEmployee) return;
+    if (rams.status !== 'success' || rams.records.length === 0) return;
+    // TD can be success OR error (some employees have no TD)
+    if (td.status !== 'success' && td.status !== 'error') return;
+
+    const match = rams.records.find((r) => r.name === rams.savedEmployee);
+    if (!match) return;
+
+    autoApplied.current = true;
+    handleSelect(match.name);
+  }, [rams.status, rams.records, rams.hasSavedEmployee, rams.savedEmployee, td.status]);
 
   // ── Handle employee selection from RAMS dropdown ──
   const handleSelect = (ramsName: string) => {

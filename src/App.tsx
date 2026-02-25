@@ -185,28 +185,40 @@ function App() {
               <span className="result-card__sub">Leave at {result.canLeaveAt}</span>
             </ResultCard>
 
-            <ResultCard
-              icon="⏰"
-              label="Extra Time Required"
-              value={extraTimeCountdown === '0:00:00' ? 'CLEAR' : extraTimeCountdown}
-              highlight={extraTimeCountdown !== '0:00:00'}
-              countdown={extraTimeCountdown !== '0:00:00'}
-            >
-              <span className="result-card__sub">
-                {extraTimeCountdown !== '0:00:00' ? 'TD exceeds office stay' : 'No extra time needed ✔'}
-              </span>
-            </ResultCard>
+            {hasTdData.current ? (
+              <ResultCard
+                icon="⏰"
+                label="Extra Time Required"
+                value={extraTimeCountdown === '0:00:00' ? 'CLEAR' : extraTimeCountdown}
+                highlight={extraTimeCountdown !== '0:00:00'}
+                countdown={extraTimeCountdown !== '0:00:00'}
+              >
+                <span className="result-card__sub">
+                  {extraTimeCountdown !== '0:00:00' ? 'TD exceeds office stay' : 'No extra time needed ✔'}
+                </span>
+              </ResultCard>
+            ) : (
+              <ResultCard icon="⏰" label="Extra Time Required" value="N/A">
+                <span className="result-card__sub">No Time Doctor for this employee</span>
+              </ResultCard>
+            )}
 
-            <ResultCard
-              icon="☕"
-              label="Available Free Time"
-              value={freeTimeCountdown === '0:00:00' ? 'NONE' : freeTimeCountdown}
-              countdown={freeTimeCountdown !== '0:00:00'}
-            >
-              <span className="result-card__sub">
-                {freeTimeCountdown === '0:00:00' ? 'No buffer remaining' : 'Break / buffer time'}
-              </span>
-            </ResultCard>
+            {hasTdData.current ? (
+              <ResultCard
+                icon="☕"
+                label="Available Free Time"
+                value={freeTimeCountdown === '0:00:00' ? 'NONE' : freeTimeCountdown}
+                countdown={freeTimeCountdown !== '0:00:00'}
+              >
+                <span className="result-card__sub">
+                  {freeTimeCountdown === '0:00:00' ? 'No buffer remaining' : 'Break / buffer time'}
+                </span>
+              </ResultCard>
+            ) : (
+              <ResultCard icon="☕" label="Available Free Time" value="N/A">
+                <span className="result-card__sub">No Time Doctor for this employee</span>
+              </ResultCard>
+            )}
           </section>
 
           <button className="btn-reset" onClick={() => setStarted(false)}>
