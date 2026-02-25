@@ -125,14 +125,18 @@ async function tryStrategy(
 
   if (usersRes.ok) {
     const usersData = await usersRes.json();
-    const userList = usersData.data || usersData;
+    // Handle various response shapes: { data: [...] }, { data: { users: [...] } }, or raw array
+    let userList = usersData.data || usersData;
+    if (userList && !Array.isArray(userList) && Array.isArray(userList.users)) {
+      userList = userList.users;
+    }
 
     if (Array.isArray(userList) && userList.length > 1) {
       isAdmin = true;
       userList.forEach((u: any) => {
         const uid = u.id || u.userId || u._id;
         const name = u.name || u.fullName || u.email || uid;
-        if (uid && u.active !== false) {
+        if (uid && u.active !== false && u.deleted !== true) {
           userMap[uid] = name;
           userIds.push(uid);
         }
@@ -182,19 +186,29 @@ async function tryStrategy(
     });
   }
 
-  // Build records for users with tracked time, sorted descending
-  const records: TDRecord[] = userIds
-    .filter((uid) => (perUser[uid] || 0) > 0)
-    .map((uid) => ({
+  // Build records for ALL users — those with time first (desc), then the rest (alpha)
+  const withTime: TDRecord[] = [];
+  const withoutTime: TDRecord[] = [];
+
+  userIds.forEach((uid) => {
+    const secs = perUser[uid] || 0;
+    const rec: TDRecord = {
       name: userMap[uid] || uid,
-      timeWorked: secondsToHMS(perUser[uid]),
-      seconds: perUser[uid],
+      timeWorked: secondsToHMS(secs),
+      seconds: secs,
       userId: uid,
-    }))
-    .sort((a, b) => b.seconds - a.seconds);
+    };
+    if (secs > 0) withTime.push(rec);
+    else withoutTime.push(rec);
+  });
+
+  withTime.sort((a, b) => b.seconds - a.seconds);
+  withoutTime.sort((a, b) => a.name.localeCompare(b.name));
+
+  const records: TDRecord[] = [...withTime, ...withoutTime];
 
   if (records.length === 0) {
-    const err = new Error('No tracked time found for today.');
+    const err = new Error('No users found.');
     (err as any).isEmptyData = true;
     throw err;
   }
@@ -240,7 +254,8 @@ export function useTimeDoctor() {
 
           setRecords(result.records);
           setStatus('success');
-          setMessage(`Found ${result.records.length} employee(s) with tracked time. Select below.`);
+          const withTime = result.records.filter((r) => r.seconds > 0).length;
+          setMessage(`Found ${result.records.length} employee(s) (${withTime} with tracked time). Select below.`);
 
           // Auto-apply if we have a saved employee
           const saved = localStorage.getItem(LS_TD_EMPLOYEE) ?? '';
