@@ -91,14 +91,16 @@ function App() {
             </button>
           ))}
         </nav>
-        <button
-          className={`btn-refresh${refreshing ? ' btn-refresh--spin' : ''}`}
-          onClick={handleRefresh}
-          disabled={refreshing}
-          title="Refresh data"
-        >
-          {refreshing ? <span className="refresh-spinner" /> : '⚡'}
-        </button>
+        {started && (
+          <button
+            className={`btn-refresh${refreshing ? ' btn-refresh--spin' : ''}`}
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh data"
+          >
+            {refreshing ? <span className="refresh-spinner" /> : '⚡'}
+          </button>
+        )}
         <button className="btn-theme" onClick={toggleTheme} title="Toggle theme">
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
