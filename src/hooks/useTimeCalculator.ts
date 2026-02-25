@@ -135,6 +135,7 @@ export function useTimeCalculator() {
   const tdRemainingCountdown = formatCountdown(result.timeDoctorRemaining);
   const stayRemainingCountdown = formatCountdown(result.stayRemaining);
   const extraTimeCountdown = formatCountdown(result.extraTimeRequired);
+  const effectiveStayRemainingCountdown = formatCountdown(result.effectiveStayRemaining);
   const freeTimeCountdown = formatCountdown(result.freeTime);
 
   return {
@@ -163,6 +164,7 @@ export function useTimeCalculator() {
     tdTrackedStr,
     tdRemainingCountdown,
     stayRemainingCountdown,
+    effectiveStayRemainingCountdown,
     extraTimeCountdown,
     freeTimeCountdown,
     recalculate: () => setNow(new Date()),

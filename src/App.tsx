@@ -35,6 +35,7 @@ function App() {
     tdTrackedStr,
     tdRemainingCountdown,
     stayRemainingCountdown,
+    effectiveStayRemainingCountdown,
     extraTimeCountdown,
     freeTimeCountdown,
   } = useTimeCalculator();
@@ -224,11 +225,14 @@ function App() {
             <ResultCard
               icon="🏢"
               label="Office Stay Remaining"
-              value={stayRemainingCountdown}
+              value={effectiveStayRemainingCountdown}
               highlight={result.drivingConstraint === 'entry'}
               countdown
             >
-              <span className="result-card__sub">Leave at {result.canLeaveAt}</span>
+              <span className="result-card__sub">Leave at {result.effectiveCanLeaveAt}</span>
+              {extraTimeCountdown !== '0:00:00' && (
+                <span className="result-card__sub">+{extraTimeCountdown} extra (TD)</span>
+              )}
             </ResultCard>
 
             {hasTdData.current ? (

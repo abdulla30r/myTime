@@ -24,6 +24,10 @@ export interface TimeResult {
   stayRemaining: TimeDuration;
   /** Extra time required beyond office stay (TD remaining - stay remaining, or 0) */
   extraTimeRequired: TimeDuration;
+  /** Effective office stay remaining (stay + extra time if any) */
+  effectiveStayRemaining: TimeDuration;
+  /** Effective leave time (accounting for extra time) */
+  effectiveCanLeaveAt: string;
   /** Which constraint is driving: 'timeDoctor' | 'entry' */
   drivingConstraint: 'timeDoctor' | 'entry';
   /** Free time = stay time remaining - time doctor remaining */

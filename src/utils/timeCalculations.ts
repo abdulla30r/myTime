@@ -99,10 +99,14 @@ export function calculateTimes(
     ? Math.max(0, tdRemainingSec - Math.max(0, stayRemainingSec))
     : 0;
 
-  // 5. Free time = how much office stay time is NOT consumed by Time Doctor work
+  // 5. Effective stay remaining = stay + extra time (if TD exceeds stay)
+  const effectiveStayRemainingSec = stayRemainingSec + extraTimeSec;
+  const effectiveCanLeaveAtMin = canLeaveAtMin + (extraTimeSec / 60);
+
+  // 6. Free time = how much office stay time is NOT consumed by Time Doctor work
   const freeTimeSec = stayRemainingSec - tdRemainingSec;
 
-  // 5. Progress
+  // 7. Progress
   const progressPercent = Math.min(
     100,
     Math.max(0, (workedSeconds / (REQUIRED_WORK_MINUTES * 60)) * 100),
@@ -113,6 +117,8 @@ export function calculateTimes(
     canLeaveAt: minutesToTimeString(canLeaveAtMin),
     stayRemaining: secondsToDuration(stayRemainingSec),
     extraTimeRequired: secondsToDuration(extraTimeSec),
+    effectiveStayRemaining: secondsToDuration(effectiveStayRemainingSec),
+    effectiveCanLeaveAt: minutesToTimeString(effectiveCanLeaveAtMin),
     drivingConstraint,
     freeTime: secondsToDuration(freeTimeSec),
     progressPercent: Math.round(progressPercent),
