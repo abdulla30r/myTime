@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTimeDoctor } from '../hooks/useTimeDoctor';
 
 interface TDPanelProps {
@@ -7,18 +6,11 @@ interface TDPanelProps {
 
 export function TDPanel({ onApply }: TDPanelProps) {
   const {
-    email,
-    setEmail,
-    password,
-    setPassword,
     status,
     message,
     timeWorked,
     fetchTimeDoctor,
-    hasSavedCredentials,
   } = useTimeDoctor();
-
-  const [showLogin, setShowLogin] = useState(!hasSavedCredentials);
 
   const handleFetch = () => {
     fetchTimeDoctor(onApply);
@@ -26,28 +18,6 @@ export function TDPanel({ onApply }: TDPanelProps) {
 
   return (
     <div className="td-panel">
-      {/* Login form — only shown if no saved credentials or user wants to change */}
-      {showLogin && (
-        <div className="td-login">
-          <input
-            className="td-input"
-            type="email"
-            placeholder="TD Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
-          />
-          <input
-            className="td-input"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
-          />
-        </div>
-      )}
-
       <button
         className="td-fetch-btn"
         onClick={handleFetch}
@@ -73,15 +43,6 @@ export function TDPanel({ onApply }: TDPanelProps) {
         <div className="td-result">
           ✅ Applied: <strong>{timeWorked}</strong>
         </div>
-      )}
-
-      {hasSavedCredentials && !showLogin && (
-        <button
-          className="td-change-btn"
-          onClick={() => setShowLogin(true)}
-        >
-          ↻ Change Account
-        </button>
       )}
     </div>
   );

@@ -3,9 +3,11 @@ import { useState, useCallback } from 'react';
 // ── Types ──
 export type TDStatus = 'idle' | 'loading' | 'success' | 'error';
 
+// ── Hardcoded credentials (admin account with all-user access) ──
+const TD_EMAIL = 'arshil.azim@avianbpo.com';
+const TD_PASSWORD = 'Noshortcut1.';
+
 // ── localStorage keys ──
-const LS_TD_EMAIL = 'myTime_tdEmail';
-const LS_TD_PASSWORD = 'myTime_tdPassword';
 const LS_TD_TOKEN = 'myTime_tdToken';
 const LS_TD_COMPANY = 'myTime_tdCompanyId';
 const LS_TD_USER = 'myTime_tdUserId';
@@ -37,22 +39,6 @@ function saveToken(data: { token: string; companyId: string; userId: string }) {
   localStorage.setItem(LS_TD_COMPANY, data.companyId);
   localStorage.setItem(LS_TD_USER, data.userId);
   localStorage.setItem(LS_TD_TOKEN_TIME, Date.now().toString());
-}
-
-function getSavedCredentials(): { email: string; password: string } | null {
-  const email = localStorage.getItem(LS_TD_EMAIL);
-  const password = localStorage.getItem(LS_TD_PASSWORD);
-  if (!email || !password) return null;
-  try {
-    return { email, password: atob(password) };
-  } catch {
-    return null;
-  }
-}
-
-function saveCredentials(email: string, password: string) {
-  localStorage.setItem(LS_TD_EMAIL, email);
-  localStorage.setItem(LS_TD_PASSWORD, btoa(password));
 }
 
 // ── Helpers ──
@@ -201,22 +187,12 @@ async function tryStrategy(
 
 // ── Hook ──
 export function useTimeDoctor() {
-  const saved = getSavedCredentials();
-  const [email, setEmail] = useState(saved?.email ?? '');
-  const [password, setPassword] = useState(saved?.password ?? '');
   const [status, setStatus] = useState<TDStatus>('idle');
   const [message, setMessage] = useState('');
   const [timeWorked, setTimeWorked] = useState<string | null>(null);
-  const hasSavedCredentials = !!saved;
 
   const fetchTimeDoctor = useCallback(
     async (onApply?: (hours: number, minutes: number) => void) => {
-      if (!email || !password) {
-        setStatus('error');
-        setMessage('Please enter email and password.');
-        return;
-      }
-
       setStatus('loading');
       setMessage('Connecting...');
 
@@ -228,7 +204,7 @@ export function useTimeDoctor() {
         setMessage(`${i === 0 ? 'Connecting' : 'Retrying'} via ${strategy.name}...`);
 
         try {
-          const result = await tryStrategy(strategy.baseUrl, email, password, storedAuth);
+          const result = await tryStrategy(strategy.baseUrl, TD_EMAIL, TD_PASSWORD, storedAuth);
           const formatted = secondsToHMS(result.totalSeconds);
           const hours = Math.floor(result.totalSeconds / 3600);
           const minutes = Math.floor((result.totalSeconds % 3600) / 60);
@@ -236,7 +212,6 @@ export function useTimeDoctor() {
           setTimeWorked(formatted);
           setStatus('success');
           setMessage(`Time worked: ${formatted}`);
-          saveCredentials(email, password);
 
           if (onApply) onApply(hours, minutes);
           return;
@@ -253,18 +228,13 @@ export function useTimeDoctor() {
       setStatus('error');
       setMessage(lastError?.message ?? 'Could not connect to TimeDoctor.');
     },
-    [email, password],
+    [],
   );
 
   return {
-    email,
-    setEmail,
-    password,
-    setPassword,
     status,
     message,
     timeWorked,
     fetchTimeDoctor,
-    hasSavedCredentials,
   };
 }
