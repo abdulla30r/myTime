@@ -18,10 +18,22 @@ app.use(
     pathRewrite: { '^/rams-api': '/rams' },
     secure: true,
     cookieDomainRewrite: '',
+    cookiePathRewrite: { '/rams': '/rams-api' },
     on: {
       proxyReq: (proxyReq) => {
-        // Ensure cookies pass through
         proxyReq.setHeader('Origin', 'https://rumytechnologies.com');
+      },
+      proxyRes: (proxyRes) => {
+        // Rewrite any Set-Cookie paths and remove Secure/SameSite restrictions
+        const cookies = proxyRes.headers['set-cookie'];
+        if (cookies) {
+          proxyRes.headers['set-cookie'] = cookies.map((c) =>
+            c
+              .replace(/Path=\/rams/gi, 'Path=/rams-api')
+              .replace(/;\s*Secure/gi, '')
+              .replace(/;\s*SameSite=\w+/gi, '; SameSite=Lax')
+          );
+        }
       },
     },
   }),
