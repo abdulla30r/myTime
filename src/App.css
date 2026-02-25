@@ -26,6 +26,7 @@
 }
 
 /* ── Theme Toggle ── */
+.btn-refresh,
 .btn-theme {
   width: 48px;
   height: 48px;
@@ -43,10 +44,42 @@
   flex-shrink: 0;
 }
 
+.btn-refresh {
+  font-size: 1.1rem;
+  letter-spacing: 0;
+}
+
+.btn-refresh:hover:not(:disabled),
 .btn-theme:hover {
   border-color: var(--accent);
   background: var(--accent-bg);
   box-shadow: var(--glow-accent);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-refresh--spin {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent), 0 0 24px rgba(255, 45, 85, 0.15);
+}
+
+/* Refresh spinner */
+.refresh-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--border-card);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: refresh-spin 0.6s linear infinite;
+  filter: drop-shadow(0 0 4px var(--accent));
+}
+
+@keyframes refresh-spin {
+  to { transform: rotate(360deg); }
 }
 
 .tab-bar__tab {

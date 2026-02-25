@@ -1,14 +1,17 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import './App.css';
 import { useTimeCalculator } from './hooks/useTimeCalculator';
 import { useTheme } from './hooks/useTheme';
 import { ResultCard } from './components/ResultCard';
 import { ProgressBar } from './components/ProgressBar';
 import { FetchPanel } from './components/FetchPanel';
+import type { FetchPanelHandle } from './components/FetchPanel';
 import type { ScheduleMode } from './types/time';
 
 function App() {
   const { theme, toggleTheme } = useTheme();
+  const fetchPanelRef = useRef<FetchPanelHandle>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const hasTdData = useRef(true); // false when employee has no TD mapping
   const {
     started,
@@ -50,6 +53,14 @@ function App() {
             </button>
           ))}
         </nav>
+        <button
+          className={`btn-refresh${refreshing ? ' btn-refresh--spin' : ''}`}
+          onClick={() => fetchPanelRef.current?.refresh()}
+          disabled={refreshing}
+          title="Refresh data"
+        >
+          {refreshing ? <span className="refresh-spinner" /> : '⚡'}
+        </button>
         <button className="btn-theme" onClick={toggleTheme} title="Toggle theme">
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
@@ -99,6 +110,8 @@ function App() {
 
           {/* Single fetch panel */}
           <FetchPanel
+            ref={fetchPanelRef}
+            onLoadingChange={setRefreshing}
             onApply={(entry, td) => {
               setEntryHour(entry.hour);
               setEntryMinute(entry.minute);

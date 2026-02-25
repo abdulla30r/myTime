@@ -1,19 +1,31 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useRAMS } from '../hooks/useRAMS';
 import { useTimeDoctor } from '../hooks/useTimeDoctor';
 import { getTDNameForRAMS } from '../utils/employeeMap';
 
-interface FetchPanelProps {
-  onApply: (entry: { hour: number; minute: number }, td: { hours: number; minutes: number } | null) => void;
+export interface FetchPanelHandle {
+  refresh: () => void;
 }
 
-export function FetchPanel({ onApply }: FetchPanelProps) {
+interface FetchPanelProps {
+  onApply: (entry: { hour: number; minute: number }, td: { hours: number; minutes: number } | null) => void;
+  onLoadingChange?: (loading: boolean) => void;
+}
+
+export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function FetchPanel({ onApply, onLoadingChange }, ref) {
   const rams = useRAMS();
   const td = useTimeDoctor();
   const [fetching, setFetching] = useState(false);
   const autoApplied = useRef(false); // prevent double-apply
 
   const isLoading = fetching || rams.status === 'loading' || td.status === 'loading';
+
+  // Notify parent of loading state changes
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
+
+  useImperativeHandle(ref, () => ({ refresh: handleFetch }), []);
 
   // ── Single fetch: RAMS + TD in parallel ──
   const handleFetch = async () => {
@@ -160,4 +172,4 @@ export function FetchPanel({ onApply }: FetchPanelProps) {
       )}
     </div>
   );
-}
+});
