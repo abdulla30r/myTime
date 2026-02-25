@@ -4,14 +4,12 @@ import { useTimeCalculator } from './hooks/useTimeCalculator';
 import { useTheme } from './hooks/useTheme';
 import { ResultCard } from './components/ResultCard';
 import { ProgressBar } from './components/ProgressBar';
-import { RAMSPanel } from './components/RAMSPanel';
-import { TDPanel } from './components/TDPanel';
+import { FetchPanel } from './components/FetchPanel';
 import type { ScheduleMode } from './types/time';
 
 function App() {
   const { theme, toggleTheme } = useTheme();
-  const ramsFetched = useRef(false);
-  const tdFetched = useRef(false);
+  const hasTdData = useRef(true); // false when employee has no TD mapping
   const {
     started,
     setStarted,
@@ -69,7 +67,7 @@ function App() {
         /* ── Setup Screen ── */
         <section className="setup-screen">
           <div className="setup-row">
-            {/* Entry Time — from RAMS */}
+            {/* Entry Time */}
             <div className="setup-card">
               <div className="setup-card__header">
                 <span className="setup-card__icon">🚪</span>
@@ -78,35 +76,37 @@ function App() {
               <div className="setup-card__value">
                 {entryHour.toString().padStart(2, '0')}:{entryMinute.toString().padStart(2, '0')}
               </div>
-              <RAMSPanel
-                onApply={(h, m) => {
-                  setEntryHour(h);
-                  setEntryMinute(m);
-                  ramsFetched.current = true;
-                  if (tdFetched.current) setStarted(true);
-                }}
-              />
             </div>
 
-            {/* Time Doctor — from TD API */}
+            {/* Time Doctor */}
             <div className="setup-card">
               <div className="setup-card__header">
                 <span className="setup-card__icon">🖥</span>
                 <span className="setup-card__label">Time Doctor</span>
               </div>
               <div className="setup-card__value">
-                {tdHours.toString().padStart(2, '0')}:{tdMinutes.toString().padStart(2, '0')}
+                {hasTdData.current
+                  ? `${tdHours.toString().padStart(2, '0')}:${tdMinutes.toString().padStart(2, '0')}`
+                  : 'N/A'}
               </div>
-              <TDPanel
-                onApply={(h, m) => {
-                  setTdHours(h);
-                  setTdMinutes(m);
-                  tdFetched.current = true;
-                  if (ramsFetched.current) setStarted(true);
-                }}
-              />
             </div>
           </div>
+
+          {/* Single fetch panel */}
+          <FetchPanel
+            onApply={(entry, td) => {
+              setEntryHour(entry.hour);
+              setEntryMinute(entry.minute);
+              if (td) {
+                setTdHours(td.hours);
+                setTdMinutes(td.minutes);
+                hasTdData.current = true;
+              } else {
+                hasTdData.current = false;
+              }
+              setStarted(true);
+            }}
+          />
 
           <button className="btn-start" onClick={() => setStarted(true)}>
             ▶ START
@@ -136,9 +136,15 @@ function App() {
                 <span className="input-card__label">Time Doctor</span>
               </div>
               <div className="input-card__display">
-                <span className="input-card__time">{tdTrackedStr}</span>
-                <span className="input-card__countdown">⏳ {tdRemainingCountdown} left</span>
-                <span className="input-card__sub">set: {tdHours}h {tdMinutes}m</span>
+                {hasTdData.current ? (
+                  <>
+                    <span className="input-card__time">{tdTrackedStr}</span>
+                    <span className="input-card__countdown">⏳ {tdRemainingCountdown} left</span>
+                    <span className="input-card__sub">set: {tdHours}h {tdMinutes}m</span>
+                  </>
+                ) : (
+                  <span className="input-card__time input-card__na">N/A</span>
+                )}
               </div>
             </div>
           </section>
@@ -151,17 +157,23 @@ function App() {
 
           {/* ── Countdown Results ── */}
           <section className="results-section">
-            <ResultCard
-              icon="🖥"
-              label="Time Doctor Remaining"
-              value={tdRemainingCountdown}
-              highlight={result.drivingConstraint === 'timeDoctor'}
-              countdown
-            >
-              {result.tdTrackedSeconds >= result.progressPercent && result.progressPercent >= 100 && (
-                <span className="result-card__sub">Quota complete ✔</span>
-              )}
-            </ResultCard>
+            {hasTdData.current ? (
+              <ResultCard
+                icon="🖥"
+                label="Time Doctor Remaining"
+                value={tdRemainingCountdown}
+                highlight={result.drivingConstraint === 'timeDoctor'}
+                countdown
+              >
+                {result.tdTrackedSeconds >= result.progressPercent && result.progressPercent >= 100 && (
+                  <span className="result-card__sub">Quota complete ✔</span>
+                )}
+              </ResultCard>
+            ) : (
+              <ResultCard icon="🖥" label="Time Doctor Remaining" value="N/A">
+                <span className="result-card__sub">No Time Doctor for this employee</span>
+              </ResultCard>
+            )}
 
             <ResultCard
               icon="🏢"

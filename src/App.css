@@ -1230,3 +1230,132 @@
   font-size: 0.95rem;
   cursor: pointer;
 }
+
+/* ── Unified Fetch Panel ── */
+.fetch-panel {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.fetch-btn {
+  width: 100%;
+  padding: 0.75rem 1.2rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.fetch-btn:hover:not(:disabled) {
+  background: var(--accent-bg-strong);
+  border-color: var(--accent);
+  box-shadow: var(--glow-accent);
+}
+
+.fetch-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fetch-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--accent-border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: rams-spin 0.6s linear infinite;
+}
+
+.fetch-status {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.fetch-status--loading {
+  background: var(--accent-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-card);
+}
+
+.fetch-status--success {
+  background: #0a2e1a;
+  color: #4ade80;
+  border: 1px solid #166534;
+}
+
+.fetch-status--error {
+  background: #2e0a0a;
+  color: #f87171;
+  border: 1px solid #7f1d1d;
+}
+
+[data-theme='light'] .fetch-status--success {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+[data-theme='light'] .fetch-status--error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.fetch-select-group {
+  margin-top: 0.5rem;
+}
+
+.fetch-select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent-border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.fetch-change-btn {
+  width: 100%;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-card);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.fetch-change-btn:hover {
+  color: var(--text-secondary);
+  border-color: var(--accent-border);
+}
+
+.input-card__na {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
