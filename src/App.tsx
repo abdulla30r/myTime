@@ -107,10 +107,6 @@ function App() {
               setStarted(true);
             }}
           />
-
-          <button className="btn-start" onClick={() => setStarted(true)}>
-            ▶ START
-          </button>
         </section>
       ) : (
         /* ── Countdown Screen ── */
