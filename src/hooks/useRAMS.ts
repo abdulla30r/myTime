@@ -64,17 +64,19 @@ export function useRAMS() {
   const [message, setMessage] = useState('');
   const [records, setRecords] = useState<RAMSRecord[]>([]);
   const [selectedTime, setSelectedTime] = useState('');
-  const [savedEmployee] = useState<string>(() => {
+  const [savedEmployee, setSavedEmployee] = useState<string>(() => {
     try { return localStorage.getItem(LS_RAMS_EMPLOYEE) ?? ''; } catch { return ''; }
   });
   const hasSavedEmployee = savedEmployee !== '';
 
   const saveEmployee = (name: string) => {
     try { localStorage.setItem(LS_RAMS_EMPLOYEE, name); } catch { /* ignore */ }
+    setSavedEmployee(name);
   };
 
   const clearSavedEmployee = () => {
     try { localStorage.removeItem(LS_RAMS_EMPLOYEE); } catch { /* ignore */ }
+    setSavedEmployee('');
   };
 
   const fetchAttendance = useCallback(async (onAutoApply?: (h: number, m: number) => void) => {
