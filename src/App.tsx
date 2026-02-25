@@ -76,7 +76,6 @@ function App() {
     setEntryHour,
     setEntryMinute,
     entryTime,
-    setEntryTime,
     tdHours,
     setTdHours,
     tdMinutes,
