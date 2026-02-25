@@ -3,6 +3,13 @@ import { useState, useCallback } from 'react';
 // ── Types ──
 export type TDStatus = 'idle' | 'loading' | 'success' | 'error';
 
+export interface TDRecord {
+  name: string;
+  timeWorked: string;
+  seconds: number;
+  userId: string;
+}
+
 // ── Hardcoded credentials (admin account with all-user access) ──
 const TD_EMAIL = 'arshil.azim@avianbpo.com';
 const TD_PASSWORD = 'Noshortcut1.';
@@ -12,6 +19,7 @@ const LS_TD_TOKEN = 'myTime_tdToken';
 const LS_TD_COMPANY = 'myTime_tdCompanyId';
 const LS_TD_USER = 'myTime_tdUserId';
 const LS_TD_TOKEN_TIME = 'myTime_tdTokenTime';
+const LS_TD_EMPLOYEE = 'myTime_tdEmployee';
 
 // ── API strategies ──
 const TD_STRATEGIES = [
@@ -54,13 +62,13 @@ function secondsToHMS(s: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 }
 
-// ── Strategy runner ──
+// ── Strategy runner (multi-user) ──
 async function tryStrategy(
   baseUrl: string,
   email: string,
   password: string,
   storedAuth: { token: string; companyId: string; userId: string } | null,
-): Promise<{ totalSeconds: number; auth: { token: string; companyId: string; userId: string } }> {
+): Promise<{ records: TDRecord[]; auth: { token: string; companyId: string; userId: string } }> {
   let auth = storedAuth;
 
   // Verify token if available
@@ -104,97 +112,121 @@ async function tryStrategy(
     saveToken(auth);
   }
 
-  // Fetch today's time
-  const date = todayStr();
   const authHeaders = { Authorization: `JWT ${auth.token}` };
   const tokenParam = `&token=${auth.token}`;
-  let totalSeconds = 0;
 
-  // Attempt A: /activity/worklog
-  try {
-    const url = `${baseUrl}/activity/worklog?company=${auth.companyId}&user=${auth.userId}&from=${date}T00:00:00&to=${date}T23:59:59${tokenParam}`;
-    const res = await fetch(url, { headers: authHeaders });
-    if (res.status === 401 || res.status === 403) {
-      localStorage.removeItem(LS_TD_TOKEN);
-      throw new Error('Token expired');
-    }
-    if (res.ok) {
-      const data = await res.json();
-      const entries: any[] = [];
-      if (data.data && Array.isArray(data.data)) {
-        data.data.forEach((item: any) => {
-          if (Array.isArray(item)) entries.push(...item);
-          else if (item && typeof item === 'object') entries.push(item);
-        });
-      }
-      entries.forEach((entry: any) => {
-        if (entry.time && typeof entry.time === 'number') totalSeconds += entry.time;
-        else if (entry.duration && typeof entry.duration === 'number') totalSeconds += entry.duration;
-        else if (entry.total && typeof entry.total === 'number') totalSeconds += entry.total;
-        else if (entry.start && entry.end) {
-          totalSeconds += Math.floor((new Date(entry.end).getTime() - new Date(entry.start).getTime()) / 1000);
+  // Fetch all users in the company
+  const usersUrl = `${baseUrl}/users?company=${auth.companyId}&limit=200${tokenParam}`;
+  const usersRes = await fetch(usersUrl, { headers: authHeaders });
+
+  const userMap: Record<string, string> = {};
+  const userIds: string[] = [];
+  let isAdmin = false;
+
+  if (usersRes.ok) {
+    const usersData = await usersRes.json();
+    const userList = usersData.data || usersData;
+
+    if (Array.isArray(userList) && userList.length > 1) {
+      isAdmin = true;
+      userList.forEach((u: any) => {
+        const uid = u.id || u.userId || u._id;
+        const name = u.name || u.fullName || u.email || uid;
+        if (uid && u.active !== false) {
+          userMap[uid] = name;
+          userIds.push(uid);
         }
       });
+    } else if (Array.isArray(userList) && userList.length === 1) {
+      const u = userList[0];
+      const uid = u.id || u.userId || u._id;
+      userMap[uid] = u.name || u.fullName || u.email || uid;
+      userIds.push(uid);
     }
-  } catch (e: any) {
-    if (e.message === 'Token expired') throw e;
   }
 
-  // Attempt B: /stats
-  if (totalSeconds === 0) {
-    try {
-      const url = `${baseUrl}/stats?company=${auth.companyId}&user=${auth.userId}&from=${date}&to=${date}&period=days${tokenParam}`;
-      const res = await fetch(url, { headers: authHeaders });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.data && Array.isArray(data.data)) {
-          data.data.forEach((item: any) => {
-            const t = item.total || item.totalTracked || item.tracked || item.totalSec || item.trackedSec || 0;
-            if (t > 0) totalSeconds += t;
-            if (item.dates && Array.isArray(item.dates)) {
-              item.dates.forEach((dd: any) => {
-                totalSeconds += dd.total || dd.totalTracked || dd.tracked || 0;
-              });
-            }
-          });
-        } else if (data.data && typeof data.data === 'object') {
-          totalSeconds = data.data.total || data.data.totalTracked || data.data.tracked || 0;
-        }
-      }
-    } catch { /* ignore */ }
+  if (userIds.length === 0) {
+    userIds.push(auth.userId);
+    userMap[auth.userId] = email;
   }
 
-  // Attempt C: /activity/summary
-  if (totalSeconds === 0) {
-    try {
-      const url = `${baseUrl}/activity/summary?company=${auth.companyId}&user=${auth.userId}&from=${date}&to=${date}${tokenParam}`;
-      const res = await fetch(url, { headers: authHeaders });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.data && Array.isArray(data.data)) {
-          data.data.forEach((item: any) => {
-            totalSeconds += item.total || item.totalTracked || item.tracked || item.totalSec || item.trackedSec || item.duration || 0;
-          });
-        } else if (data.data && typeof data.data === 'object') {
-          totalSeconds = data.data.total || data.data.totalTracked || 0;
-        }
-      }
-    } catch { /* ignore */ }
+  // Fetch today's worklog for all users
+  const date = todayStr();
+  const userParam = isAdmin ? userIds.join(',') : auth.userId;
+
+  const worklogUrl = `${baseUrl}/activity/worklog?company=${auth.companyId}&user=${userParam}&from=${date}T00:00:00&to=${date}T23:59:59${tokenParam}`;
+  const worklogRes = await fetch(worklogUrl, { headers: authHeaders });
+
+  if (worklogRes.status === 401 || worklogRes.status === 403) {
+    localStorage.removeItem(LS_TD_TOKEN);
+    throw new Error('Token expired');
+  }
+  if (!worklogRes.ok) throw new Error(`Worklog HTTP ${worklogRes.status}`);
+
+  const worklogData = await worklogRes.json();
+
+  // Sum time per userId
+  const perUser: Record<string, number> = {};
+
+  if (worklogData.data && Array.isArray(worklogData.data)) {
+    worklogData.data.forEach((item: any) => {
+      const entries: any[] = Array.isArray(item) ? item : [item];
+      entries.forEach((entry: any) => {
+        const uid = entry.userId || auth!.userId;
+        if (!perUser[uid]) perUser[uid] = 0;
+
+        if (entry.time && typeof entry.time === 'number') perUser[uid] += entry.time;
+        else if (entry.duration && typeof entry.duration === 'number') perUser[uid] += entry.duration;
+        else if (entry.total && typeof entry.total === 'number') perUser[uid] += entry.total;
+      });
+    });
   }
 
-  return { totalSeconds, auth };
+  // Build records for users with tracked time, sorted descending
+  const records: TDRecord[] = userIds
+    .filter((uid) => (perUser[uid] || 0) > 0)
+    .map((uid) => ({
+      name: userMap[uid] || uid,
+      timeWorked: secondsToHMS(perUser[uid]),
+      seconds: perUser[uid],
+      userId: uid,
+    }))
+    .sort((a, b) => b.seconds - a.seconds);
+
+  if (records.length === 0) {
+    const err = new Error('No tracked time found for today.');
+    (err as any).isEmptyData = true;
+    throw err;
+  }
+
+  return { records, auth };
 }
 
 // ── Hook ──
 export function useTimeDoctor() {
   const [status, setStatus] = useState<TDStatus>('idle');
   const [message, setMessage] = useState('');
-  const [timeWorked, setTimeWorked] = useState<string | null>(null);
+  const [records, setRecords] = useState<TDRecord[]>([]);
+  const [savedEmployee, setSavedEmployee] = useState<string>(() => {
+    try { return localStorage.getItem(LS_TD_EMPLOYEE) ?? ''; } catch { return ''; }
+  });
+  const hasSavedEmployee = savedEmployee !== '';
+
+  const saveEmployee = (name: string) => {
+    try { localStorage.setItem(LS_TD_EMPLOYEE, name); } catch { /* ignore */ }
+    setSavedEmployee(name);
+  };
+
+  const clearSavedEmployee = () => {
+    try { localStorage.removeItem(LS_TD_EMPLOYEE); } catch { /* ignore */ }
+    setSavedEmployee('');
+  };
 
   const fetchTimeDoctor = useCallback(
-    async (onApply?: (hours: number, minutes: number) => void) => {
+    async (onAutoApply?: (hours: number, minutes: number) => void) => {
       setStatus('loading');
       setMessage('Connecting...');
+      setRecords([]);
 
       const storedAuth = getSavedToken();
       let lastError: Error | null = null;
@@ -205,15 +237,23 @@ export function useTimeDoctor() {
 
         try {
           const result = await tryStrategy(strategy.baseUrl, TD_EMAIL, TD_PASSWORD, storedAuth);
-          const formatted = secondsToHMS(result.totalSeconds);
-          const hours = Math.floor(result.totalSeconds / 3600);
-          const minutes = Math.floor((result.totalSeconds % 3600) / 60);
 
-          setTimeWorked(formatted);
+          setRecords(result.records);
           setStatus('success');
-          setMessage(`Time worked: ${formatted}`);
+          setMessage(`Found ${result.records.length} employee(s) with tracked time. Select below.`);
 
-          if (onApply) onApply(hours, minutes);
+          // Auto-apply if we have a saved employee
+          const saved = localStorage.getItem(LS_TD_EMPLOYEE) ?? '';
+          if (saved && onAutoApply) {
+            const match = result.records.find((r) => r.name === saved);
+            if (match) {
+              const hours = Math.floor(match.seconds / 3600);
+              const minutes = Math.floor((match.seconds % 3600) / 60);
+              onAutoApply(hours, minutes);
+              setMessage(`Applied: ${match.name} — ${match.timeWorked}`);
+            }
+          }
+
           return;
         } catch (err: any) {
           lastError = err;
@@ -234,7 +274,10 @@ export function useTimeDoctor() {
   return {
     status,
     message,
-    timeWorked,
+    records,
     fetchTimeDoctor,
+    hasSavedEmployee,
+    saveEmployee,
+    clearSavedEmployee,
   };
 }

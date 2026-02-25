@@ -1214,3 +1214,19 @@
   color: var(--text-secondary);
   border-color: var(--accent-border);
 }
+
+.td-select-group {
+  margin-top: 0.5rem;
+}
+
+.td-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent-border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
