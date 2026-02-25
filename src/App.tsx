@@ -34,7 +34,6 @@ function App() {
     entryElapsedStr,
     tdTrackedStr,
     tdRemainingCountdown,
-    stayRemainingCountdown,
     effectiveStayRemainingCountdown,
     extraTimeCountdown,
     freeTimeCountdown,
@@ -205,17 +204,25 @@ function App() {
           {/* ── Countdown Results ── */}
           <section className="results-section">
             {hasTdData.current ? (
-              <ResultCard
-                icon="🖥"
-                label="Time Doctor Remaining"
-                value={tdRemainingCountdown}
-                highlight={result.drivingConstraint === 'timeDoctor'}
-                countdown
-              >
-                {result.tdTrackedSeconds >= result.progressPercent && result.progressPercent >= 100 && (
-                  <span className="result-card__sub">Quota complete ✔</span>
-                )}
-              </ResultCard>
+              result.progressPercent >= 100 ? (
+                <ResultCard
+                  icon="🖥"
+                  label="Time Doctor Remaining"
+                  value="No need to work more ✔"
+                >
+                  <span className="result-card__sub" style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                    {tdRemainingCountdown}
+                  </span>
+                </ResultCard>
+              ) : (
+                <ResultCard
+                  icon="🖥"
+                  label="Time Doctor Remaining"
+                  value={tdRemainingCountdown}
+                  highlight={result.drivingConstraint === 'timeDoctor'}
+                  countdown
+                />
+              )
             ) : (
               <ResultCard icon="🖥" label="Time Doctor Remaining" value="N/A">
                 <span className="result-card__sub">No Time Doctor for this employee</span>
