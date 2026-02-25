@@ -10,10 +10,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ── RAMS proxy ──
+// Use pathFilter + global mount so http-proxy-middleware sees the full path
 app.use(
-  '/rams-api',
   createProxyMiddleware({
     target: 'https://rumytechnologies.com',
+    pathFilter: '/rams-api',
     changeOrigin: true,
     pathRewrite: { '^/rams-api': '/rams' },
     secure: true,
@@ -24,7 +25,6 @@ app.use(
         proxyReq.setHeader('Origin', 'https://rumytechnologies.com');
       },
       proxyRes: (proxyRes) => {
-        // Rewrite any Set-Cookie paths and remove Secure/SameSite restrictions
         const cookies = proxyRes.headers['set-cookie'];
         if (cookies) {
           proxyRes.headers['set-cookie'] = cookies.map((c) =>
@@ -52,9 +52,9 @@ app.options('/td-api/{*splat}', (_req, res) => {
 });
 
 app.use(
-  '/td-api',
   createProxyMiddleware({
     target: 'https://api2.timedoctor.com',
+    pathFilter: '/td-api',
     changeOrigin: true,
     pathRewrite: { '^/td-api': '/api/1.0' },
     secure: true,
