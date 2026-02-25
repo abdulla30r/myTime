@@ -1,0 +1,118 @@
+/* ── Theme Variables ── */
+
+/* Dark mode (default) — Gaming Red */
+:root,
+[data-theme='dark'] {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #110d18;
+  --bg-card: #16101f;
+  --bg-card-hover: #201828;
+  --bg-input: #1c1426;
+  --border-subtle: #2a1e35;
+  --border-card: #321a2a;
+  --border-focus: #ff2d55;
+  --text-primary: #f0e8ec;
+  --text-secondary: #a08a92;
+  --text-muted: #6a5a62;
+  --accent: #ff2d55;
+  --accent-secondary: #ff5c72;
+  --accent-bg: #2a0a18;
+  --accent-bg-strong: #3d0e22;
+  --accent-border: #5a1530;
+  --highlight-bg: #1f0818;
+  --highlight-border: #ff2d55;
+  --progress-bg: #1c1426;
+  --progress-fill: linear-gradient(90deg, #ff2d55, #ff5c72);
+  --shadow-card: 0 4px 20px #0a000808, 0 0 12px #ff2d5510;
+  --shadow-tab: 0 2px 10px #0a000a;
+  --tab-bg: #110d18;
+  --tab-active-bg: #2a0a18;
+  --countdown-color: #ff5c72;
+  --clock-gradient: linear-gradient(135deg, #ff2d55, #ff5c72, #ff8888);
+  --toggle-bg: #1c1426;
+  --toggle-icon-color: #f0e8ec;
+  --glow-accent: 0 0 20px #ff2d5540, 0 0 40px #ff2d5520;
+  --glow-card: 0 0 8px #ff2d5512;
+  --bar-glow: 0 0 12px #ff2d5550;
+
+  font-family: 'Rajdhani', 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color-scheme: dark;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light mode — Blood Rose */
+[data-theme='light'] {
+  color-scheme: light;
+  --bg-primary: #f5eded;
+  --bg-secondary: #ece0e2;
+  --bg-card: #ffffff;
+  --bg-card-hover: #faf5f6;
+  --bg-input: #f2eaec;
+  --border-subtle: #e4d5d8;
+  --border-card: #d8c8cc;
+  --border-focus: #cc2244;
+  --text-primary: #1a0e12;
+  --text-secondary: #6a4a52;
+  --text-muted: #9a7a82;
+  --accent: #cc2244;
+  --accent-secondary: #e03858;
+  --accent-bg: #fce8ec;
+  --accent-bg-strong: #f6d0d8;
+  --accent-border: #e8a0b0;
+  --highlight-bg: #fff0f3;
+  --highlight-border: #cc2244;
+  --progress-bg: #e4d5d8;
+  --progress-fill: linear-gradient(90deg, #cc2244, #e03858);
+  --shadow-card: 0 2px 8px #3a0a1510;
+  --shadow-tab: 0 2px 6px #3a0a1510;
+  --tab-bg: #ece0e2;
+  --tab-active-bg: #ffffff;
+  --countdown-color: #b01e3a;
+  --clock-gradient: linear-gradient(135deg, #cc2244, #e03858, #f06080);
+  --toggle-bg: #ece0e2;
+  --toggle-icon-color: #1a0e12;
+  --glow-accent: none;
+  --glow-card: none;
+  --bar-glow: none;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
