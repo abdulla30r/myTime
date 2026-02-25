@@ -56,7 +56,12 @@ function App() {
       </div>
 
       <div className="title-row">
-        <h1 className="app__title">⏱ myTime</h1>
+        <h1 className="app__title">
+          {(() => {
+            const name = localStorage.getItem('myTime_ramsEmployee');
+            return name ? `👋 Hello, ${name}` : '⏱ myTime';
+          })()}
+        </h1>
         <div className="live-clock">{clock}</div>
       </div>
       <p className="app__subtitle">
