@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import './App.css';
 import { useTimeCalculator } from './hooks/useTimeCalculator';
 import { useTheme } from './hooks/useTheme';
@@ -12,6 +12,7 @@ function App() {
   const { theme, toggleTheme } = useTheme();
   const fetchPanelRef = useRef<FetchPanelHandle>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshMessages, setRefreshMessages] = useState<string[]>([]);
   const hasTdData = useRef(true); // false when employee has no TD mapping
   const {
     started,
@@ -38,8 +39,45 @@ function App() {
     freeTimeCountdown,
   } = useTimeCalculator();
 
+  const handleApply = useCallback((entry: { hour: number; minute: number }, td: { hours: number; minutes: number } | null) => {
+    setEntryHour(entry.hour);
+    setEntryMinute(entry.minute);
+    if (td) {
+      setTdHours(td.hours);
+      setTdMinutes(td.minutes);
+      hasTdData.current = true;
+    } else {
+      hasTdData.current = false;
+    }
+    setStarted(true);
+    setRefreshing(false);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setRefreshMessages([]);
+    fetchPanelRef.current?.refresh();
+  }, []);
+
+  const handleRefreshMessage = useCallback((msgs: string[]) => {
+    setRefreshMessages(msgs);
+  }, []);
+
   return (
     <div className="app">
+      {/* ── Refresh Overlay ── */}
+      {refreshing && started && (
+        <div className="refresh-overlay">
+          <div className="refresh-overlay__card">
+            <span className="refresh-spinner refresh-spinner--lg" />
+            <h2 className="refresh-overlay__title">Refreshing Data</h2>
+            {refreshMessages.map((msg, i) => (
+              <div key={i} className={`refresh-overlay__msg`}>{msg}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Top Row: Tab Bar + Theme Toggle ── */}
       <div className="top-row">
         <nav className="tab-bar">
@@ -55,7 +93,7 @@ function App() {
         </nav>
         <button
           className={`btn-refresh${refreshing ? ' btn-refresh--spin' : ''}`}
-          onClick={() => fetchPanelRef.current?.refresh()}
+          onClick={handleRefresh}
           disabled={refreshing}
           title="Refresh data"
         >
@@ -78,6 +116,16 @@ function App() {
       <p className="app__subtitle">
         {config.workHours}h work · {config.stayHours}h stay — TRACK WHAT'S LEFT
       </p>
+
+      {/* FetchPanel always mounted so refresh ref works from countdown screen */}
+      <div style={started ? { position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' } : undefined}>
+        <FetchPanel
+          ref={fetchPanelRef}
+          onLoadingChange={setRefreshing}
+          onMessages={handleRefreshMessage}
+          onApply={handleApply}
+        />
+      </div>
 
       {!started ? (
         /* ── Setup Screen ── */
@@ -107,24 +155,6 @@ function App() {
               </div>
             </div>
           </div>
-
-          {/* Single fetch panel */}
-          <FetchPanel
-            ref={fetchPanelRef}
-            onLoadingChange={setRefreshing}
-            onApply={(entry, td) => {
-              setEntryHour(entry.hour);
-              setEntryMinute(entry.minute);
-              if (td) {
-                setTdHours(td.hours);
-                setTdMinutes(td.minutes);
-                hasTdData.current = true;
-              } else {
-                hasTdData.current = false;
-              }
-              setStarted(true);
-            }}
-          />
         </section>
       ) : (
         /* ── Countdown Screen ── */

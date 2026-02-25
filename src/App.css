@@ -82,6 +82,65 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── Refresh Overlay ── */
+.refresh-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+  animation: overlay-fade-in 0.2s ease;
+}
+
+@keyframes overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.refresh-overlay__card {
+  text-align: center;
+  padding: 2.5rem 3rem;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  box-shadow: 0 0 30px rgba(255, 45, 85, 0.2), var(--shadow-card);
+  min-width: 320px;
+  max-width: 90vw;
+}
+
+.refresh-spinner--lg {
+  width: 40px;
+  height: 40px;
+  border-width: 3px;
+  margin-bottom: 1.25rem;
+}
+
+.refresh-overlay__title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: var(--glow-accent);
+  margin: 0 0 1rem;
+}
+
+.refresh-overlay__msg {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.4rem;
+  background: var(--accent-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-card);
+}
+
 .tab-bar__tab {
   flex: 1;
   padding: 0.7rem 1rem;

@@ -10,9 +10,10 @@ export interface FetchPanelHandle {
 interface FetchPanelProps {
   onApply: (entry: { hour: number; minute: number }, td: { hours: number; minutes: number } | null) => void;
   onLoadingChange?: (loading: boolean) => void;
+  onMessages?: (messages: string[]) => void;
 }
 
-export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function FetchPanel({ onApply, onLoadingChange }, ref) {
+export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function FetchPanel({ onApply, onLoadingChange, onMessages }, ref) {
   const rams = useRAMS();
   const td = useTimeDoctor();
   const [fetching, setFetching] = useState(false);
@@ -25,7 +26,13 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
     onLoadingChange?.(isLoading);
   }, [isLoading, onLoadingChange]);
 
-  useImperativeHandle(ref, () => ({ refresh: handleFetch }), []);
+  // Pipe status messages to parent for overlay
+  useEffect(() => {
+    const msgs: string[] = [];
+    if (rams.message) msgs.push(`RAMS: ${rams.message}`);
+    if (td.message) msgs.push(`TD: ${td.message}`);
+    if (msgs.length > 0) onMessages?.(msgs);
+  }, [rams.message, td.message, onMessages]);
 
   // ── Single fetch: RAMS + TD in parallel ──
   const handleFetch = async () => {
@@ -46,6 +53,8 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
 
     setFetching(false);
   };
+
+  useImperativeHandle(ref, () => ({ refresh: handleFetch }));
 
   // ── Auto-apply saved employee once both RAMS + TD finish ──
   useEffect(() => {
