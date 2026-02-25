@@ -10,7 +10,6 @@ export function RAMSPanel({ onApply }: RAMSPanelProps) {
     message,
     records,
     selectedTime,
-    setSelectedTime,
     fetchAttendance,
     hasSavedEmployee,
     saveEmployee,
