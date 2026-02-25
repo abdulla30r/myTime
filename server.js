@@ -17,6 +17,13 @@ app.use(
     changeOrigin: true,
     pathRewrite: { '^/rams-api': '/rams' },
     secure: true,
+    cookieDomainRewrite: '',
+    on: {
+      proxyReq: (proxyReq) => {
+        // Ensure cookies pass through
+        proxyReq.setHeader('Origin', 'https://rumytechnologies.com');
+      },
+    },
   }),
 );
 
@@ -28,6 +35,12 @@ app.use(
     changeOrigin: true,
     pathRewrite: { '^/td-api': '/api/1.0' },
     secure: true,
+    on: {
+      proxyRes: (proxyRes) => {
+        // Allow browser to store credentials
+        proxyRes.headers['access-control-allow-origin'] = '*';
+      },
+    },
   }),
 );
 
