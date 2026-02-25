@@ -1,70 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import './App.css';
 import { useTimeCalculator } from './hooks/useTimeCalculator';
 import { useTheme } from './hooks/useTheme';
 import { ResultCard } from './components/ResultCard';
 import { ProgressBar } from './components/ProgressBar';
-import { TimePicker } from './components/TimePicker';
+import { RAMSPanel } from './components/RAMSPanel';
+import { TDPanel } from './components/TDPanel';
 import type { ScheduleMode } from './types/time';
-
-/** Input that lets users clear the field and type freely; commits on blur/Enter */
-function SetupInput({
-  label,
-  value,
-  min,
-  max,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  onChange: (v: number) => void;
-}) {
-  const [text, setText] = useState(value.toString().padStart(2, '0'));
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Sync from parent when value changes externally (e.g. via picker)
-  useEffect(() => {
-    if (document.activeElement !== inputRef.current) {
-      setText(value.toString().padStart(2, '0'));
-    }
-  }, [value]);
-
-  const commit = () => {
-    const n = parseInt(text, 10);
-    if (!isNaN(n)) {
-      const clamped = Math.max(min, Math.min(max, n));
-      onChange(clamped);
-      setText(clamped.toString().padStart(2, '0'));
-    } else {
-      setText(value.toString().padStart(2, '0'));
-    }
-  };
-
-  return (
-    <div className="setup-field">
-      <label className="setup-field__label">{label}</label>
-      <input
-        ref={inputRef}
-        className="setup-field__input"
-        type="text"
-        inputMode="numeric"
-        maxLength={2}
-        value={text}
-        onChange={(e) => setText(e.target.value.replace(/\D/g, '').slice(0, 2))}
-        onBlur={commit}
-        onKeyDown={(e) => { if (e.key === 'Enter') { commit(); (e.target as HTMLInputElement).blur(); } }}
-        onFocus={(e) => e.target.select()}
-      />
-    </div>
-  );
-}
 
 function App() {
   const { theme, toggleTheme } = useTheme();
-  const [setupEntryPicker, setSetupEntryPicker] = useState(false);
-  const [setupTdPicker, setSetupTdPicker] = useState(false);
+  const ramsFetched = useRef(false);
+  const tdFetched = useRef(false);
   const {
     started,
     setStarted,
@@ -82,10 +29,6 @@ function App() {
     setTdMinutes,
     result,
     clock,
-    editingEntry,
-    setEditingEntry,
-    editingTd,
-    setEditingTd,
     entryElapsedStr,
     tdTrackedStr,
     tdRemainingCountdown,
@@ -114,8 +57,10 @@ function App() {
         </button>
       </div>
 
-      <h1 className="app__title">⏱ myTime</h1>
-      <div className="live-clock">{clock}</div>
+      <div className="title-row">
+        <h1 className="app__title">⏱ myTime</h1>
+        <div className="live-clock">{clock}</div>
+      </div>
       <p className="app__subtitle">
         {config.workHours}h work · {config.stayHours}h stay — TRACK WHAT'S LEFT
       </p>
@@ -123,48 +68,44 @@ function App() {
       {!started ? (
         /* ── Setup Screen ── */
         <section className="setup-screen">
-          <div className="setup-card">
-            <div className="setup-card__header">
-              <span className="setup-card__icon">🚪</span>
-              <span className="setup-card__label">Entry Time</span>
-              <button className="btn-modify" onClick={() => setSetupEntryPicker(true)}>⚙ PICK</button>
-            </div>
-            <div className="setup-card__inputs">
-              <SetupInput label="HR" value={entryHour} min={0} max={23} onChange={setEntryHour} />
-              <span className="setup-sep">:</span>
-              <SetupInput label="MIN" value={entryMinute} min={0} max={59} onChange={setEntryMinute} />
-            </div>
-            {setupEntryPicker && (
-              <TimePicker
-                hour={entryHour}
-                minute={entryMinute}
-                onHourChange={setEntryHour}
-                onMinuteChange={setEntryMinute}
-                onClose={() => setSetupEntryPicker(false)}
+          <div className="setup-row">
+            {/* Entry Time — from RAMS */}
+            <div className="setup-card">
+              <div className="setup-card__header">
+                <span className="setup-card__icon">🚪</span>
+                <span className="setup-card__label">Entry Time</span>
+              </div>
+              <div className="setup-card__value">
+                {entryHour.toString().padStart(2, '0')}:{entryMinute.toString().padStart(2, '0')}
+              </div>
+              <RAMSPanel
+                onApply={(h, m) => {
+                  setEntryHour(h);
+                  setEntryMinute(m);
+                  ramsFetched.current = true;
+                  if (tdFetched.current) setStarted(true);
+                }}
               />
-            )}
-          </div>
+            </div>
 
-          <div className="setup-card">
-            <div className="setup-card__header">
-              <span className="setup-card__icon">🖥</span>
-              <span className="setup-card__label">Time Doctor Tracked</span>
-              <button className="btn-modify" onClick={() => setSetupTdPicker(true)}>⚙ PICK</button>
-            </div>
-            <div className="setup-card__inputs">
-              <SetupInput label="HR" value={tdHours} min={0} max={config.workHours} onChange={setTdHours} />
-              <span className="setup-sep">:</span>
-              <SetupInput label="MIN" value={tdMinutes} min={0} max={59} onChange={setTdMinutes} />
-            </div>
-            {setupTdPicker && (
-              <TimePicker
-                hour={tdHours}
-                minute={tdMinutes}
-                onHourChange={(h) => setTdHours(Math.min(h, config.workHours))}
-                onMinuteChange={setTdMinutes}
-                onClose={() => setSetupTdPicker(false)}
+            {/* Time Doctor — from TD API */}
+            <div className="setup-card">
+              <div className="setup-card__header">
+                <span className="setup-card__icon">🖥</span>
+                <span className="setup-card__label">Time Doctor</span>
+              </div>
+              <div className="setup-card__value">
+                {tdHours.toString().padStart(2, '0')}:{tdMinutes.toString().padStart(2, '0')}
+              </div>
+              <TDPanel
+                onApply={(h, m) => {
+                  setTdHours(h);
+                  setTdMinutes(m);
+                  tdFetched.current = true;
+                  if (ramsFetched.current) setStarted(true);
+                }}
               />
-            )}
+            </div>
           </div>
 
           <button className="btn-start" onClick={() => setStarted(true)}>
@@ -181,26 +122,11 @@ function App() {
               <div className="input-card__header">
                 <span className="input-card__icon">🚪</span>
                 <span className="input-card__label">Entry Time</span>
-                <button
-                  className="btn-modify"
-                  onClick={() => setEditingEntry(true)}
-                >
-                  ⚙ SET
-                </button>
               </div>
               <div className="input-card__display">
                 <span className="input-card__time">{entryElapsedStr}</span>
                 <span className="input-card__sub">since {entryTime}</span>
               </div>
-              {editingEntry && (
-                <TimePicker
-                  hour={entryHour}
-                  minute={entryMinute}
-                  onHourChange={setEntryHour}
-                  onMinuteChange={setEntryMinute}
-                  onClose={() => setEditingEntry(false)}
-                />
-              )}
             </div>
 
             {/* Time Doctor Card */}
@@ -208,27 +134,12 @@ function App() {
               <div className="input-card__header">
                 <span className="input-card__icon">🖥</span>
                 <span className="input-card__label">Time Doctor</span>
-                <button
-                  className="btn-modify"
-                  onClick={() => setEditingTd(true)}
-                >
-                  ⚙ SET
-                </button>
               </div>
               <div className="input-card__display">
                 <span className="input-card__time">{tdTrackedStr}</span>
                 <span className="input-card__countdown">⏳ {tdRemainingCountdown} left</span>
                 <span className="input-card__sub">set: {tdHours}h {tdMinutes}m</span>
               </div>
-              {editingTd && (
-                <TimePicker
-                  hour={tdHours}
-                  minute={tdMinutes}
-                  onHourChange={(h) => setTdHours(Math.min(h, config.workHours))}
-                  onMinuteChange={setTdMinutes}
-                  onClose={() => setEditingTd(false)}
-                />
-              )}
             </div>
           </section>
 

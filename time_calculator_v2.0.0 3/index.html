@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Time Calculator</h1>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="normal">Normal Time Calculator</button>
+            <button class="tab-btn" data-tab="av1an">Av1an Time Calculator</button>
+        </div>
+
+        <!-- Normal Time Calculator Tab Content -->
+        <div id="normalTab" class="tab-content active">
+        <div class="calculators-row">
+            <div class="calculator-card">
+                <!-- Time Format Selection -->
+                <div class="format-selector">
+                <label>
+                    <input type="radio" name="format" value="HHMMSS" checked>
+                    HH:MM:SS
+                </label>
+                <label>
+                    <input type="radio" name="format" value="HHMM">
+                    HH:MM
+                </label>
+            </div>
+
+            <!-- Time Input 1 -->
+            <div class="input-group">
+                <label for="time1">Time 1:</label>
+                <input type="text" id="time1" placeholder="00:00:00" maxlength="8">
+                <span class="hint">Example: 10:30:45</span>
+            </div>
+
+            <!-- Operation Selector -->
+            <div class="operation-selector">
+                <label>
+                    <input type="radio" name="operation" value="add" checked>
+                    <span class="operation-btn">+ Add</span>
+                </label>
+                <label>
+                    <input type="radio" name="operation" value="subtract">
+                    <span class="operation-btn">− Subtract</span>
+                </label>
+            </div>
+
+            <!-- Time Input 2 -->
+            <div class="input-group">
+                <label for="time2">Time 2:</label>
+                <input type="text" id="time2" placeholder="00:00:00" maxlength="8">
+                <span class="hint">Example: 05:15:30</span>
+            </div>
+
+            <!-- Calculate Button -->
+            <button id="calculateBtn" class="calculate-btn">Calculate</button>
+
+            <!-- Result Display -->
+            <div id="result" class="result hidden">
+                <h3>Result:</h3>
+                <div class="result-value"></div>
+            </div>
+
+            <!-- Error Display -->
+            <div id="error" class="error hidden"></div>
+        </div>
+        </div>
+        </div>
+        <!-- End Normal Time Calculator Tab Content -->
+
+        <!-- Av1an Time Calculator Tab Content -->
+        <div id="av1anTab" class="tab-content">
+            <!-- Settings Row: Ramadan Switch + UTC Selector -->
+            <div class="settings-row">
+                <!-- Ramadan Mode Switch -->
+                <div class="ramadan-switch-container">
+                    <label class="switch-label">
+                        <input type="checkbox" id="ramadanSwitch" class="ramadan-checkbox">
+                        <span class="switch-slider"></span>
+                        <span class="switch-text">Ramadan</span>
+                    </label>
+                </div>
+
+                <!-- UTC Timezone Selector -->
+                <div class="utc-selector-container">
+                    <label class="utc-label" for="utcOffset">
+                        <span class="utc-icon">🌐</span>
+                        <span class="utc-text">Timezone</span>
+                    </label>
+                    <select id="utcOffset" class="utc-select">
+                        <option value="-12">UTC−12:00</option>
+                        <option value="-11">UTC−11:00</option>
+                        <option value="-10">UTC−10:00</option>
+                        <option value="-9.5">UTC−09:30</option>
+                        <option value="-9">UTC−09:00</option>
+                        <option value="-8">UTC−08:00</option>
+                        <option value="-7">UTC−07:00</option>
+                        <option value="-6">UTC−06:00</option>
+                        <option value="-5">UTC−05:00</option>
+                        <option value="-4">UTC−04:00</option>
+                        <option value="-3.5">UTC−03:30</option>
+                        <option value="-3">UTC−03:00</option>
+                        <option value="-2">UTC−02:00</option>
+                        <option value="-1">UTC−01:00</option>
+                        <option value="0">UTC±00:00</option>
+                        <option value="1">UTC+01:00</option>
+                        <option value="2">UTC+02:00</option>
+                        <option value="3">UTC+03:00</option>
+                        <option value="3.5">UTC+03:30</option>
+                        <option value="4">UTC+04:00</option>
+                        <option value="4.5">UTC+04:30</option>
+                        <option value="5">UTC+05:00</option>
+                        <option value="5.5">UTC+05:30</option>
+                        <option value="5.75">UTC+05:45</option>
+                        <option value="6" selected>UTC+06:00</option>
+                        <option value="6.5">UTC+06:30</option>
+                        <option value="7">UTC+07:00</option>
+                        <option value="8">UTC+08:00</option>
+                        <option value="8.75">UTC+08:45</option>
+                        <option value="9">UTC+09:00</option>
+                        <option value="9.5">UTC+09:30</option>
+                        <option value="10">UTC+10:00</option>
+                        <option value="10.5">UTC+10:30</option>
+                        <option value="11">UTC+11:00</option>
+                        <option value="12">UTC+12:00</option>
+                        <option value="12.75">UTC+12:45</option>
+                        <option value="13">UTC+13:00</option>
+                        <option value="14">UTC+14:00</option>
+                    </select>
+                    <button id="detectTimezoneBtn" class="detect-tz-btn" title="Auto-detect timezone">📍 Detect</button>
+                </div>
+            </div>
+
+            <div class="calculators-row">
+        <!-- 9-Hour Shift Calculator Section -->
+        <div class="calculator-card">
+            <h2>Shift Time Calculator</h2>
+            <p class="section-description">Enter arrival time to calculate departure time (+9 hours)</p>
+
+            <!-- RAMS Integration: Fetch Arrival from Attendance System -->
+            <div class="rams-section">
+                <button type="button" id="ramsToggleBtn" class="rams-toggle-btn">
+                    <span class="rams-icon">📡</span>
+                    <span>Fetch from RAMS</span>
+                    <span class="rams-arrow" id="ramsArrow">▼</span>
+                </button>
+
+                <div id="ramsPanel" class="rams-panel hidden">
+                    <!-- Login Form -->
+                    <div id="ramsLoginForm" class="rams-login-form">
+                        <div class="rams-input-row">
+                            <div class="rams-field">
+                                <label for="ramsUsername">Username</label>
+                                <input type="text" id="ramsUsername" placeholder="RAMS username" autocomplete="username">
+                            </div>
+                            <div class="rams-field">
+                                <label for="ramsPassword">Password</label>
+                                <input type="password" id="ramsPassword" placeholder="Password" autocomplete="current-password">
+                            </div>
+                        </div>
+                        <div class="rams-actions-row">
+                            <label class="rams-remember">
+                                <input type="checkbox" id="ramsRemember"> Remember me
+                            </label>
+                            <button type="button" id="ramsFetchBtn" class="rams-fetch-btn">
+                                <span id="ramsFetchText">Fetch Attendance</span>
+                                <span id="ramsFetchSpinner" class="rams-spinner hidden"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status Messages -->
+                    <div id="ramsStatus" class="rams-status hidden"></div>
+
+                    <!-- Employee Dropdown -->
+                    <div id="ramsDropdownContainer" class="rams-dropdown-container hidden">
+                        <label for="ramsEmployeeSelect">Select Employee:</label>
+                        <select id="ramsEmployeeSelect" class="rams-select">
+                            <option value="">-- Select an employee --</option>
+                        </select>
+                        <button type="button" id="ramsApplyBtn" class="rams-apply-btn">Use This Time</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arrival Time Input -->
+            <div class="input-group">
+                <label for="shiftArrivalTime">Arrival Time:</label>
+                <div class="time-input-row">
+                    <input type="text" id="shiftArrivalTime" placeholder="00:00:00" maxlength="8">
+                    <button type="button" id="timePickerToggle" class="time-picker-toggle" title="Open time picker">🕐</button>
+                </div>
+                <span class="hint">Example: 09:00:00</span>
+            </div>
+
+            <!-- Time Picker Widget -->
+            <div id="timePickerWidget" class="time-picker-widget hidden">
+                <div class="time-picker-header">
+                    <span>Pick Arrival Time</span>
+                    <button type="button" id="timePickerNow" class="tp-now-btn" title="Set to current time">Now</button>
+                </div>
+                <div class="time-picker-spinners">
+                    <div class="tp-drum-column">
+                        <span class="tp-label">HH</span>
+                        <div class="tp-drum" id="tpHoursDrum" data-type="hours">
+                            <div class="tp-drum-list" id="tpHoursList"></div>
+                        </div>
+                    </div>
+                    <span class="tp-colon-drum">:</span>
+                    <div class="tp-drum-column">
+                        <span class="tp-label">MM</span>
+                        <div class="tp-drum" id="tpMinutesDrum" data-type="minutes">
+                            <div class="tp-drum-list" id="tpMinutesList"></div>
+                        </div>
+                    </div>
+                    <span class="tp-colon-drum tp-colon-seconds">:</span>
+                    <div class="tp-drum-column tp-spinner-seconds">
+                        <span class="tp-label">SS</span>
+                        <div class="tp-drum" id="tpSecondsDrum" data-type="seconds">
+                            <div class="tp-drum-list" id="tpSecondsList"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="time-picker-presets">
+                    <button type="button" class="tp-preset" data-time="07:00">7 AM</button>
+                    <button type="button" class="tp-preset" data-time="08:00">8 AM</button>
+                    <button type="button" class="tp-preset" data-time="09:00">9 AM</button>
+                    <button type="button" class="tp-preset" data-time="10:00">10 AM</button>
+                </div>
+                <div class="time-picker-actions">
+                    <button type="button" id="timePickerSet" class="tp-set-btn">Set Time</button>
+                    <button type="button" id="timePickerCancel" class="tp-cancel-btn">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Calculate Button -->
+            <button id="calculateShiftBtn" class="calculate-btn">Calculate Departure Time</button>
+
+            <!-- Result Display -->
+            <div id="shiftResult" class="result hidden">
+                <h3>Departure Time:</h3>
+                <div class="result-value"></div>
+                <p class="shift-note">Departure is 9 hours after arrival</p>
+            </div>
+
+            <!-- Error Display -->
+            <div id="shiftError" class="error hidden"></div>
+        </div>
+        </div>
+
+        <!-- Remaining Time Calculator Section -->
+        <div class="calculator-card">
+            <h2>Remaining Time & Final Time Calculator</h2>
+            <p class="section-description">Calculate remaining time (7 hours - elapsed time), final completion time, and free time</p>
+
+            <!-- Auto-elapsed toggle -->
+            <div class="auto-elapsed-container">
+                <label class="switch-label switch-label-sm">
+                    <input type="checkbox" id="autoElapsedSwitch" class="ramadan-checkbox">
+                    <span class="switch-slider switch-slider-sm"></span>
+                    <span class="switch-text switch-text-sm">Auto Elapsed Time</span>
+                </label>
+                <span class="auto-elapsed-hint" id="autoElapsedHint">Uses arrival time to auto-calculate</span>
+            </div>
+
+            <!-- TimeDoctor Integration: Fetch Time Worked -->
+            <div class="td-section">
+                <button type="button" id="tdToggleBtn" class="rams-toggle-btn td-toggle-btn">
+                    <span class="rams-icon">⏱️</span>
+                    <span>Fetch from TimeDoctor</span>
+                    <span class="rams-arrow" id="tdArrow">▼</span>
+                </button>
+
+                <div id="tdPanel" class="rams-panel td-panel hidden">
+                    <!-- Login Form -->
+                    <div id="tdLoginForm" class="rams-login-form">
+                        <div class="rams-input-row">
+                            <div class="rams-field">
+                                <label for="tdEmail">Email</label>
+                                <input type="email" id="tdEmail" placeholder="TimeDoctor email" autocomplete="email">
+                            </div>
+                            <div class="rams-field">
+                                <label for="tdPassword">Password</label>
+                                <input type="password" id="tdPassword" placeholder="Password" autocomplete="current-password">
+                            </div>
+                        </div>
+                        <div class="rams-actions-row">
+                            <label class="rams-remember">
+                                <input type="checkbox" id="tdRemember"> Remember me
+                            </label>
+                            <button type="button" id="tdFetchBtn" class="rams-fetch-btn td-fetch-btn">
+                                <span id="tdFetchText">Fetch Time Worked</span>
+                                <span id="tdFetchSpinner" class="rams-spinner hidden"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status Messages -->
+                    <div id="tdStatus" class="rams-status hidden"></div>
+
+                    <!-- Time Worked Display + Apply -->
+                    <div id="tdResultContainer" class="rams-dropdown-container hidden">
+                        <div class="td-time-worked-display">
+                            <span class="td-time-label">Time Worked Today:</span>
+                            <span class="td-time-value" id="tdTimeValue">--:--:--</span>
+                        </div>
+                        <button type="button" id="tdApplyBtn" class="rams-apply-btn td-apply-btn">Use as Elapsed Time</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Input -->
+            <div class="input-group">
+                <label for="elapsedTime">Elapsed Time:</label>
+                <input type="text" id="elapsedTime" placeholder="00:00:00" maxlength="8">
+                <span class="hint" id="elapsedHint">Example: 05:30:00</span>
+            </div>
+
+            <!-- Calculate Button -->
+            <button id="calculateRemainingBtn" class="calculate-btn">Calculate</button>
+
+            <!-- Countdown Timer Display -->
+            <div id="countdownContainer" class="countdown-container hidden">
+                <div class="countdown-header">
+                    <span class="countdown-icon">⏳</span>
+                    <span>Live Countdown</span>
+                </div>
+                <div class="countdown-value" id="countdownValue">00:00:00</div>
+                <div class="countdown-status" id="countdownStatus">Remaining work time</div>
+            </div>
+
+            <!-- Result Display -->
+            <div id="remainingResult" class="result hidden">
+                <div class="result-value"></div>
+            </div>
+
+            <!-- Error Display -->
+            <div id="remainingError" class="error hidden"></div>
+        </div>
+        </div>
+        <!-- End Av1an Time Calculator Tab Content -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

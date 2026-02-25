@@ -81,11 +81,17 @@ export function useTimeCalculator() {
   const entryMinute = parseInt(entryTime.split(':')[1] || '0', 10);
   const setEntryHour = (h: number) => {
     const clamped = Math.max(0, Math.min(23, h));
-    setEntryTimeRaw(`${clamped.toString().padStart(2, '0')}:${entryMinute.toString().padStart(2, '0')}`);
+    setEntryTimeRaw((prev) => {
+      const prevMin = parseInt(prev.split(':')[1] || '0', 10);
+      return `${clamped.toString().padStart(2, '0')}:${prevMin.toString().padStart(2, '0')}`;
+    });
   };
   const setEntryMinute = (m: number) => {
     const clamped = Math.max(0, Math.min(59, m));
-    setEntryTimeRaw(`${entryHour.toString().padStart(2, '0')}:${clamped.toString().padStart(2, '0')}`);
+    setEntryTimeRaw((prev) => {
+      const prevHour = parseInt(prev.split(':')[0] || '0', 10);
+      return `${prevHour.toString().padStart(2, '0')}:${clamped.toString().padStart(2, '0')}`;
+    });
   };
   const setEntryTime = setEntryTimeRaw;
 
