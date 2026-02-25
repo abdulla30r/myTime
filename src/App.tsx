@@ -222,6 +222,13 @@ function App() {
             )}
           </section>
 
+          {/* ── Motivational Quote ── */}
+          <div className="quote-card">
+            <span className="quote-card__icon">⚔️</span>
+            <p className="quote-card__text">হয় ভালোভাবে চাকরি করুন</p>
+            <p className="quote-card__text">নইলে চাকরিটা ছেড়ে দিন</p>
+          </div>
+
           <button className="btn-reset" onClick={() => setStarted(false)}>
             ✎ EDIT INPUTS
           </button>

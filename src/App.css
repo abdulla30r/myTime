@@ -120,6 +120,48 @@
   text-transform: uppercase;
 }
 
+/* ── Motivational Quote Card ── */
+.quote-card {
+  text-align: center;
+  padding: 1.5rem 2rem;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-card), var(--glow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.quote-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-gradient);
+}
+
+.quote-card__icon {
+  font-size: 1.6rem;
+  display: block;
+  margin-bottom: 0.6rem;
+  filter: drop-shadow(0 0 6px var(--accent));
+}
+
+.quote-card__text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0.15rem 0;
+  letter-spacing: 0.04em;
+  text-shadow: var(--glow-accent);
+  text-transform: none;
+}
+
 /* ── Welcome Banner ── */
 .welcome-banner {
   text-align: center;
