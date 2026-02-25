@@ -40,6 +40,17 @@ app.use(
 );
 
 // ── Time Doctor proxy ──
+// Handle CORS preflight for TD API
+app.options('/td-api/{*splat}', (_req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+  });
+  res.sendStatus(204);
+});
+
 app.use(
   '/td-api',
   createProxyMiddleware({
@@ -49,8 +60,9 @@ app.use(
     secure: true,
     on: {
       proxyRes: (proxyRes) => {
-        // Allow browser to store credentials
         proxyRes.headers['access-control-allow-origin'] = '*';
+        proxyRes.headers['access-control-allow-methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+        proxyRes.headers['access-control-allow-headers'] = 'Content-Type, Authorization';
       },
     },
   }),
