@@ -80,7 +80,7 @@ export function ActivityStats() {
         <div className="activity-stats-panel">
           {!userId && (
             <div className="activity-stats-empty">
-              No Time Doctor user linked. This employee may not use Time Doctor.
+              No Mr Time user linked. This employee may not use Mr Time.
             </div>
           )}
 

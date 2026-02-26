@@ -43,7 +43,7 @@ export function TDPanel({ onApply }: TDPanelProps) {
             Fetching...
           </>
         ) : (
-          '🖥 Fetch from Time Doctor'
+          '🖥 Fetch from Mr Time'
         )}
       </button>
 

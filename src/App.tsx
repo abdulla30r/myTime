@@ -163,7 +163,7 @@ function App() {
               </div>
             </div>
 
-            {/* Time Doctor */}
+            {/* Mr Time */}
             <div className="setup-card">
               <div className="setup-card__header">
                 <span className="setup-card__icon">🖥</span>
@@ -226,7 +226,7 @@ function App() {
               result.progressPercent >= 100 ? (
                 <ResultCard
                   icon="🖥"
-                  label="Time Doctor Remaining"
+                  label="Mr Time Remaining"
                   value="No need to work more ✔"
                 >
                   <span className="result-card__sub" style={{ fontSize: '0.7rem', opacity: 0.6 }}>
