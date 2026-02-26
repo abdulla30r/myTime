@@ -172,9 +172,11 @@
 /* ── Title Row ── */
 .title-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  margin-bottom: 2rem;
+  justify-content: center;
 }
 
 .app__title {
@@ -182,6 +184,7 @@
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
+  margin-right: auto;
   color: var(--accent);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -201,15 +204,6 @@
   background-clip: text;
   margin: 0;
   filter: drop-shadow(0 0 8px #ff2d5540);
-}
-
-.app__subtitle {
-  margin: 0 0 2rem;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 /* ── Motivational Quote Card ── */
@@ -241,6 +235,49 @@
   display: block;
   margin-bottom: 0.6rem;
   filter: drop-shadow(0 0 6px var(--accent));
+}
+
+.quote-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.quote-card__header {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary, #888);
+  margin: 0;
+}
+
+.quote-card__refresh {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--accent);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  line-height: 1;
+  transition: transform 0.2s, opacity 0.2s;
+  opacity: 0.7;
+}
+
+.quote-card__refresh:hover {
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+.quote-card__refresh:focus,
+.quote-card__refresh:active {
+  outline: none;
+  box-shadow: none;
 }
 
 .quote-card__text {
@@ -927,20 +964,19 @@
 
 /* ── Edit Inputs Button ── */
 .btn-reset {
-  margin-top: 1.5rem;
-  padding: 0.6rem 1.2rem;
+  padding: 0.45rem 1rem;
   border-radius: 8px;
   border: 1px solid var(--border-card);
   background: var(--bg-card);
   color: var(--text-secondary);
   font-family: 'Rajdhani', sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s, color 0.2s;
-  align-self: center;
+  white-space: nowrap;
 }
 
 .btn-reset:hover {
