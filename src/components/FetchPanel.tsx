@@ -181,17 +181,17 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
       {rams.hasSavedEmployee && (rams.status === 'idle' || rams.status === 'success') && (
         <button
           className="fetch-change-btn"
-          onClick={() => {
-            rams.clearSavedEmployee();
-            autoApplied.current = false;
-            // If records are still in memory, just show the dropdown
-            // Otherwise re-fetch so user can pick again
-            if (rams.records.length === 0) {
-              handleFetch();
-            }
-          }}
+          onClick={() => { rams.clearSavedEmployee(); handleFetch(); }}
+          disabled={isLoading}
         >
-          ↻ Change Employee
+          {isLoading ? (
+            <>
+              <span className="fetch-spinner" />
+              Fetching...
+            </>
+          ) : (
+            '↻ Change Employee'
+          )}
         </button>
       )}
     </div>

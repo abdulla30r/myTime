@@ -35,7 +35,7 @@ function App() {
     entryElapsedStr,
     tdTrackedStr,
     tdRemainingCountdown,
-    stayRemainingCountdown,
+    effectiveStayRemainingCountdown,
     extraTimeCountdown,
     freeTimeCountdown,
   } = useTimeCalculator();
@@ -205,17 +205,25 @@ function App() {
           {/* ── Countdown Results ── */}
           <section className="results-section">
             {hasTdData.current ? (
-              <ResultCard
-                icon="🖥"
-                label="Mr Time Remaining"
-                value={tdRemainingCountdown}
-                highlight={result.drivingConstraint === 'timeDoctor'}
-                countdown
-              >
-                {result.tdTrackedSeconds >= result.progressPercent && result.progressPercent >= 100 && (
-                  <span className="result-card__sub">Quota complete ✔</span>
-                )}
-              </ResultCard>
+              result.progressPercent >= 100 ? (
+                <ResultCard
+                  icon="🖥"
+                  label="Time Doctor Remaining"
+                  value="No need to work more ✔"
+                >
+                  <span className="result-card__sub" style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                    {tdRemainingCountdown}
+                  </span>
+                </ResultCard>
+              ) : (
+                <ResultCard
+                  icon="🖥"
+                  label="Mr Time Remaining"
+                  value={tdRemainingCountdown}
+                  highlight={result.drivingConstraint === 'timeDoctor'}
+                  countdown
+                />
+              )
             ) : (
               <ResultCard icon="🖥" label="Mr Time Remaining" value="N/A">
                 <span className="result-card__sub">No Mr Time for this employee</span>
@@ -225,11 +233,14 @@ function App() {
             <ResultCard
               icon="🏢"
               label="Office Stay Remaining"
-              value={stayRemainingCountdown}
+              value={effectiveStayRemainingCountdown}
               highlight={result.drivingConstraint === 'entry'}
               countdown
             >
-              <span className="result-card__sub">Leave at {result.canLeaveAt}</span>
+              <span className="result-card__sub">Leave at {result.effectiveCanLeaveAt}</span>
+              {extraTimeCountdown !== '0:00:00' && (
+                <span className="result-card__sub">+{extraTimeCountdown} extra (TD)</span>
+              )}
             </ResultCard>
 
             {hasTdData.current ? (
