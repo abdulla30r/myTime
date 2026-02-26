@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   useActivityStats,
-  activityRatioToLevel,
   getStatColorClass,
   secsToHMS,
 } from '../hooks/useActivityStats';
