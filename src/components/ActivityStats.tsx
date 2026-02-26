@@ -54,7 +54,6 @@ export function ActivityStats() {
   const activePct = Math.round(activeRatio * 100);
   const idlePct = Math.round(idleRatio * 100);
   const unprodPct = Math.round(unprodRatio * 100);
-  const activityText = activityRatioToLevel(activeRatio);
 
   // Extra line items
   const extras: string[] = [];
