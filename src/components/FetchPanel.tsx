@@ -174,9 +174,17 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
       {rams.hasSavedEmployee && (rams.status === 'idle' || rams.status === 'success') && (
         <button
           className="fetch-change-btn"
-          onClick={() => { rams.clearSavedEmployee(); window.location.reload(); }}
+          onClick={() => { rams.clearSavedEmployee(); handleFetch(); }}
+          disabled={isLoading}
         >
-          ↻ Change Employee
+          {isLoading ? (
+            <>
+              <span className="fetch-spinner" />
+              Fetching...
+            </>
+          ) : (
+            '↻ Change Employee'
+          )}
         </button>
       )}
     </div>
