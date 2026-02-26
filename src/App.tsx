@@ -295,33 +295,33 @@ function App() {
               </ResultCard>
             )}
           </section>
-
-          {/* ── Motivational Quote ── */}
-          <div className="quote-card">
-            <div className="quote-card__top">
-              <h3 className="quote-card__header">বাণী অমৃত</h3>
-              <button
-                className="quote-card__refresh"
-                onClick={() => {
-                  setQuoteIndex((prev) => {
-                    let next;
-                    do { next = Math.floor(Math.random() * quotes.length); } while (next === prev && quotes.length > 1);
-                    return next;
-                  });
-                  setQuoteReset((c) => c + 1);
-                }}
-                title="Next quote"
-              >
-                ↻
-              </button>
-            </div>
-            <span className="quote-card__icon">{quotes[quoteIndex].icon}</span>
-            {quotes[quoteIndex].lines.map((line, i) => (
-              <p key={i} className="quote-card__text">{line}</p>
-            ))}
-          </div>
         </>
       )}
+
+      {/* ── Motivational Quote ── */}
+      <div className="quote-card">
+        <div className="quote-card__top">
+          <h3 className="quote-card__header">বাণী অমৃত</h3>
+          <button
+            className="quote-card__refresh"
+            onClick={() => {
+              setQuoteIndex((prev) => {
+                let next;
+                do { next = Math.floor(Math.random() * quotes.length); } while (next === prev && quotes.length > 1);
+                return next;
+              });
+              setQuoteReset((c) => c + 1);
+            }}
+            title="Next quote"
+          >
+            ↻
+          </button>
+        </div>
+        <span className="quote-card__icon">{quotes[quoteIndex].icon}</span>
+        {quotes[quoteIndex].lines.map((line, i) => (
+          <p key={i} className="quote-card__text">{line}</p>
+        ))}
+      </div>
     </div>
   );
 }
