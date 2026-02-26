@@ -1,7 +1,8 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import './App.css';
 import { useTimeCalculator } from './hooks/useTimeCalculator';
 import { useTheme } from './hooks/useTheme';
+import { quotes } from './assets/data';
 import { ResultCard } from './components/ResultCard';
 import { ProgressBar } from './components/ProgressBar';
 import { FetchPanel } from './components/FetchPanel';
@@ -11,6 +12,20 @@ import type { ScheduleMode } from './types/time';
 function App() {
   const { theme, toggleTheme } = useTheme();
   const fetchPanelRef = useRef<FetchPanelHandle>(null);
+  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * quotes.length));
+  const [quoteReset, setQuoteReset] = useState(0);
+
+  useEffect(() => {
+    if (quotes.length <= 1) return;
+    const id = setInterval(() => {
+      setQuoteIndex((prev) => {
+        let next;
+        do { next = Math.floor(Math.random() * quotes.length); } while (next === prev);
+        return next;
+      });
+    }, 5000);
+    return () => clearInterval(id);
+  }, [quoteReset]);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshMessages, setRefreshMessages] = useState<string[]>([]);
   const hasTdData = useRef(true); // false when employee has no TD mapping
@@ -19,7 +34,6 @@ function App() {
     setStarted,
     mode,
     setMode,
-    config,
     entryHour,
     entryMinute,
     setEntryHour,
@@ -110,14 +124,18 @@ function App() {
         <h1 className="app__title">
           {(() => {
             const name = localStorage.getItem('myTime_ramsEmployee');
-            return name ? `👋 Hello, ${name}` : '⏱ myTime';
+            if (!name) return '⏱ myTime';
+            const clean = name.replace(/\s*\(.*\)/, '');
+            return clean;
           })()}
         </h1>
         <div className="live-clock">{clock}</div>
+        {started && (
+          <button className="btn-reset" onClick={() => setStarted(false)}>
+            ✎ EDIT INPUTS
+          </button>
+        )}
       </div>
-      <p className="app__subtitle">
-        {config.workHours}h work · {config.stayHours}h stay — TRACK WHAT'S LEFT
-      </p>
 
       {/* FetchPanel always mounted so refresh ref works from countdown screen */}
       <div style={started ? { position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' } : undefined}>
@@ -280,14 +298,28 @@ function App() {
 
           {/* ── Motivational Quote ── */}
           <div className="quote-card">
-            <span className="quote-card__icon">⚔️</span>
-            <p className="quote-card__text">হয় ভালোভাবে চাকরি করুন</p>
-            <p className="quote-card__text">নইলে চাকরিটা ছেড়ে দিন</p>
+            <div className="quote-card__top">
+              <h3 className="quote-card__header">বাণী অমৃত</h3>
+              <button
+                className="quote-card__refresh"
+                onClick={() => {
+                  setQuoteIndex((prev) => {
+                    let next;
+                    do { next = Math.floor(Math.random() * quotes.length); } while (next === prev && quotes.length > 1);
+                    return next;
+                  });
+                  setQuoteReset((c) => c + 1);
+                }}
+                title="Next quote"
+              >
+                ↻
+              </button>
+            </div>
+            <span className="quote-card__icon">{quotes[quoteIndex].icon}</span>
+            {quotes[quoteIndex].lines.map((line, i) => (
+              <p key={i} className="quote-card__text">{line}</p>
+            ))}
           </div>
-
-          <button className="btn-reset" onClick={() => setStarted(false)}>
-            ✎ EDIT INPUTS
-          </button>
         </>
       )}
     </div>
