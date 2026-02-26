@@ -51,6 +51,34 @@ app.options('/td-api/{*splat}', (_req, res) => {
   res.sendStatus(204);
 });
 
+// ── Time Doctor v1.1 proxy (activity stats) ──
+app.options('/td-api-v11/{*splat}', (_req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+  });
+  res.sendStatus(204);
+});
+
+app.use(
+  createProxyMiddleware({
+    target: 'https://api2.timedoctor.com',
+    pathFilter: '/td-api-v11',
+    changeOrigin: true,
+    pathRewrite: { '^/td-api-v11': '/api/1.1' },
+    secure: true,
+    on: {
+      proxyRes: (proxyRes) => {
+        proxyRes.headers['access-control-allow-origin'] = '*';
+        proxyRes.headers['access-control-allow-methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+        proxyRes.headers['access-control-allow-headers'] = 'Content-Type, Authorization';
+      },
+    },
+  }),
+);
+
 app.use(
   createProxyMiddleware({
     target: 'https://api2.timedoctor.com',

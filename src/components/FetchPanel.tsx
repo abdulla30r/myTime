@@ -91,6 +91,9 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
     const tdName = getTDNameForRAMS(ramsName);
     let tdData: { hours: number; minutes: number } | null = null;
 
+    // Clear any previous TD userId
+    try { localStorage.removeItem('myTime_tdSelectedUserId'); } catch { /* */ }
+
     if (typeof tdName === 'string') {
       // Find matching TD record
       const tdRecord = td.records.find(
@@ -104,6 +107,10 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
       } else {
         // Has TD mapping but no tracked time today
         tdData = { hours: 0, minutes: 0 };
+      }
+      // Save the matched TD userId for activity stats
+      if (tdRecord) {
+        try { localStorage.setItem('myTime_tdSelectedUserId', tdRecord.userId); } catch { /* */ }
       }
     }
     // tdData stays null if no TD mapping → N/A
@@ -174,7 +181,15 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
       {rams.hasSavedEmployee && (rams.status === 'idle' || rams.status === 'success') && (
         <button
           className="fetch-change-btn"
-          onClick={() => { rams.clearSavedEmployee(); window.location.reload(); }}
+          onClick={() => {
+            rams.clearSavedEmployee();
+            autoApplied.current = false;
+            // If records are still in memory, just show the dropdown
+            // Otherwise re-fetch so user can pick again
+            if (rams.records.length === 0) {
+              handleFetch();
+            }
+          }}
         >
           ↻ Change Employee
         </button>

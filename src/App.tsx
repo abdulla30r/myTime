@@ -5,6 +5,7 @@ import { useTheme } from './hooks/useTheme';
 import { ResultCard } from './components/ResultCard';
 import { ProgressBar } from './components/ProgressBar';
 import { FetchPanel } from './components/FetchPanel';
+import { ActivityStats } from './components/ActivityStats';
 import type { FetchPanelHandle } from './components/FetchPanel';
 import type { ScheduleMode } from './types/time';
 
@@ -148,7 +149,7 @@ function App() {
             <div className="setup-card">
               <div className="setup-card__header">
                 <span className="setup-card__icon">🖥</span>
-                <span className="setup-card__label">Time Doctor</span>
+                <span className="setup-card__label">Mr Time</span>
               </div>
               <div className="setup-card__value">
                 {hasTdData.current
@@ -175,11 +176,11 @@ function App() {
               </div>
             </div>
 
-            {/* Time Doctor Card */}
+            {/* Mr Time Card */}
             <div className="input-card">
               <div className="input-card__header">
                 <span className="input-card__icon">🖥</span>
-                <span className="input-card__label">Time Doctor</span>
+                <span className="input-card__label">Mr Time</span>
               </div>
               <div className="input-card__display">
                 {hasTdData.current ? (
@@ -206,7 +207,7 @@ function App() {
             {hasTdData.current ? (
               <ResultCard
                 icon="🖥"
-                label="Time Doctor Remaining"
+                label="Mr Time Remaining"
                 value={tdRemainingCountdown}
                 highlight={result.drivingConstraint === 'timeDoctor'}
                 countdown
@@ -216,8 +217,8 @@ function App() {
                 )}
               </ResultCard>
             ) : (
-              <ResultCard icon="🖥" label="Time Doctor Remaining" value="N/A">
-                <span className="result-card__sub">No Time Doctor for this employee</span>
+              <ResultCard icon="🖥" label="Mr Time Remaining" value="N/A">
+                <span className="result-card__sub">No Mr Time for this employee</span>
               </ResultCard>
             )}
 
@@ -245,7 +246,7 @@ function App() {
               </ResultCard>
             ) : (
               <ResultCard icon="⏰" label="Extra Time Required" value="N/A">
-                <span className="result-card__sub">No Time Doctor for this employee</span>
+                <span className="result-card__sub">No Mr Time for this employee</span>
               </ResultCard>
             )}
 
@@ -262,10 +263,13 @@ function App() {
               </ResultCard>
             ) : (
               <ResultCard icon="☕" label="Available Free Time" value="N/A">
-                <span className="result-card__sub">No Time Doctor for this employee</span>
+                <span className="result-card__sub">No Mr Time for this employee</span>
               </ResultCard>
             )}
           </section>
+
+          {/* ── Activity Stats ── */}
+          {hasTdData.current && <ActivityStats />}
 
           {/* ── Motivational Quote ── */}
           <div className="quote-card">

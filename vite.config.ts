@@ -13,6 +13,12 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/rams-api/, '/rams'),
         secure: true,
       },
+      '/td-api-v11': {
+        target: 'https://api2.timedoctor.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/td-api-v11/, '/api/1.1'),
+        secure: true,
+      },
       '/td-api': {
         target: 'https://api2.timedoctor.com',
         changeOrigin: true,
