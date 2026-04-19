@@ -20,7 +20,7 @@ export const quotes: Quote[] = [
   { icon: "✈️", lines: ["থাইল্যান্ড ট্যুর"] },
   { icon: "🎁", lines: ["১৫% বোনাস নিচে চান কি চান না?"] },
   { icon: "🤡", lines: ["আমি বোকাচোদা", "কারণ আমি সৎ"] },
-  { icon: "🤡", lines: ["Scan the codebase, Find the bugs", "Solve the bugs"] },
+  { icon: "👨🏿‍💻", lines: ["Scan the codebase, Find the bugs", "Solve the bugs"] },
   { icon: "👨‍🏭", lines: ["ভালো সফটওয়্যার ডেভেলপার হতে হলে, আগে ভালো মানুষ হন।"] },
 
 ];
