@@ -7,13 +7,27 @@ export interface FetchPanelHandle {
   refresh: () => void;
 }
 
+export interface FirstArrivalState {
+  status: 'loading' | 'empty' | 'found';
+  first: { name: string; firstIn: string } | null;
+}
+
 interface FetchPanelProps {
   onApply: (entry: { hour: number; minute: number }, td: { hours: number; minutes: number } | null) => void;
   onLoadingChange?: (loading: boolean) => void;
   onMessages?: (messages: string[]) => void;
+  onFirstArrival?: (state: FirstArrivalState | null) => void;
 }
 
-export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function FetchPanel({ onApply, onLoadingChange, onMessages }, ref) {
+function firstInToMinutes(firstIn: string): number {
+  const [h, m] = firstIn.split(':');
+  const hh = parseInt(h, 10);
+  const mm = parseInt(m, 10);
+  if (isNaN(hh) || isNaN(mm)) return Number.POSITIVE_INFINITY;
+  return hh * 60 + mm;
+}
+
+export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function FetchPanel({ onApply, onLoadingChange, onMessages, onFirstArrival }, ref) {
   const rams = useRAMS();
   const td = useTimeDoctor();
   const [fetching, setFetching] = useState(false);
@@ -33,6 +47,36 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
     if (td.message) msgs.push(`TD: ${td.message}`);
     if (msgs.length > 0) onMessages?.(msgs);
   }, [rams.message, td.message, onMessages]);
+
+  // Emit RAMS arrival state to parent (for top banner)
+  useEffect(() => {
+    if (!onFirstArrival) return;
+
+    if (rams.status === 'loading') {
+      onFirstArrival({ status: 'loading', first: null });
+      return;
+    }
+
+    if (rams.records.length > 0) {
+      const earliest = rams.records.reduce((best, r) =>
+        firstInToMinutes(r.firstIn) < firstInToMinutes(best.firstIn) ? r : best
+      );
+      onFirstArrival({ status: 'found', first: { name: earliest.name, firstIn: earliest.firstIn } });
+      return;
+    }
+
+    // RAMS finished but produced no records → no one in yet today
+    if (
+      rams.status === 'success' ||
+      (rams.status === 'error' && /no attendance|no records|no first-in/i.test(rams.message))
+    ) {
+      onFirstArrival({ status: 'empty', first: null });
+      return;
+    }
+
+    // idle, or a real error (login/network) → hide banner
+    onFirstArrival(null);
+  }, [rams.status, rams.records, rams.message, onFirstArrival]);
 
   // ── Single fetch: RAMS + TD in parallel ──
   const handleFetch = async () => {
@@ -55,6 +99,15 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
   };
 
   useImperativeHandle(ref, () => ({ refresh: handleFetch }));
+
+  // Auto-fetch once on mount so the top banner can display attendance immediately
+  const didAutoFetch = useRef(false);
+  useEffect(() => {
+    if (didAutoFetch.current) return;
+    didAutoFetch.current = true;
+    handleFetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Auto-apply saved employee once both RAMS + TD finish ──
   useEffect(() => {

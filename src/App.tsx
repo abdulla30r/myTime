@@ -7,7 +7,7 @@ import { ResultCard } from './components/ResultCard';
 import { ProgressBar } from './components/ProgressBar';
 import { FetchPanel } from './components/FetchPanel';
 import { ActivityStats } from './components/ActivityStats';
-import type { FetchPanelHandle } from './components/FetchPanel';
+import type { FetchPanelHandle, FirstArrivalState } from './components/FetchPanel';
 import type { ScheduleMode } from './types/time';
 
 function App() {
@@ -29,6 +29,7 @@ function App() {
   }, [quoteReset]);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshMessages, setRefreshMessages] = useState<string[]>([]);
+  const [arrivalState, setArrivalState] = useState<FirstArrivalState | null>(null);
   const hasTdData = useRef(true); // false when employee has no TD mapping
   const {
     started,
@@ -78,8 +79,46 @@ function App() {
     setRefreshMessages(msgs);
   }, []);
 
+  const savedEmployeeName = (() => {
+    try {
+      const raw = localStorage.getItem('myTime_ramsEmployee');
+      return raw ? raw.replace(/\s*\(.*\)/, '') : '';
+    } catch { return ''; }
+  })();
+  const firstArrival = arrivalState?.status === 'found' ? arrivalState.first : null;
+  const isYouFirst =
+    firstArrival !== null &&
+    savedEmployeeName !== '' &&
+    firstArrival.name.replace(/\s*\(.*\)/, '') === savedEmployeeName;
+
   return (
     <div className="app">
+      {/* ── First Arrival Banner ── */}
+      {arrivalState?.status === 'loading' && (
+        <div className="first-arrival-banner first-arrival-banner--loading">
+          <span className="refresh-spinner" />
+          <span className="first-arrival-banner__label">Checking attendance...</span>
+        </div>
+      )}
+      {arrivalState?.status === 'empty' && (
+        <div className="first-arrival-banner first-arrival-banner--empty">
+          <span className="first-arrival-banner__icon">🪑</span>
+          <span className="first-arrival-banner__label">No one is here yet</span>
+        </div>
+      )}
+      {arrivalState?.status === 'found' && firstArrival && (
+        <div className={`first-arrival-banner${isYouFirst ? ' first-arrival-banner--you' : ''}`}>
+          <span className="first-arrival-banner__icon">🏆</span>
+          <span className="first-arrival-banner__label">
+            {isYouFirst ? 'You were first in today' : 'First in today'}
+          </span>
+          <span className="first-arrival-banner__name">
+            {firstArrival.name.replace(/\s*\(.*\)/, '')}
+          </span>
+          <span className="first-arrival-banner__time">@ {firstArrival.firstIn}</span>
+        </div>
+      )}
+
       {/* ── Refresh Overlay ── */}
       {refreshing && started && (
         <div className="refresh-overlay">
@@ -145,6 +184,7 @@ function App() {
           onLoadingChange={setRefreshing}
           onMessages={handleRefreshMessage}
           onApply={handleApply}
+          onFirstArrival={setArrivalState}
         />
       </div>
 

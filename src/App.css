@@ -1811,3 +1811,82 @@
   color: var(--text-muted);
   line-height: 1.4;
 }
+
+/* ── First Arrival Banner ── */
+.first-arrival-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.12);
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text-primary);
+}
+
+.first-arrival-banner--you {
+  background: linear-gradient(90deg, rgba(255, 45, 85, 0.18), rgba(255, 45, 85, 0.05));
+  border-color: var(--accent-border);
+  box-shadow: var(--glow-accent);
+}
+
+.first-arrival-banner--loading {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.12), rgba(148, 163, 184, 0.03));
+  border-color: var(--border-card);
+  box-shadow: none;
+}
+
+.first-arrival-banner--empty {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.12), rgba(148, 163, 184, 0.03));
+  border-color: var(--border-card);
+  box-shadow: none;
+  color: var(--text-secondary);
+}
+
+.first-arrival-banner--empty .first-arrival-banner__label,
+.first-arrival-banner--loading .first-arrival-banner__label {
+  color: var(--text-secondary);
+}
+
+.first-arrival-banner__icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+}
+
+.first-arrival-banner--you .first-arrival-banner__icon {
+  filter: drop-shadow(0 0 6px var(--accent));
+}
+
+.first-arrival-banner__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.first-arrival-banner__name {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f59e0b;
+}
+
+.first-arrival-banner--you .first-arrival-banner__name {
+  color: var(--accent);
+  text-shadow: var(--glow-accent);
+}
+
+.first-arrival-banner__time {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+  color: var(--text-secondary);
+}

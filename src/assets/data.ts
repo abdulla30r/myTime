@@ -23,5 +23,6 @@ export const quotes: Quote[] = [
   { icon: "👨🏿‍💻", lines: ["Scan the codebase, Find the bugs", "Solve the bugs"] },
   { icon: "👨‍🏭", lines: ["ভালো সফটওয়্যার ডেভেলপার হতে হলে, আগে ভালো মানুষ হন।"] },
   { icon: "👩🏿‍💻", lines: ["সে একজন স্টাফ সফটওয়্যার ইঞ্জিনিয়ার, আর আপনি সাধারণ একজন সফটওয়্যার ইঞ্জিনিয়ার।"] },
+  { icon: "🪦", lines: ["অহংকার করবেন না"] },
 
 ];
