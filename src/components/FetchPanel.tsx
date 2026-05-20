@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useRAMS } from '../hooks/useRAMS';
 import { useTimeDoctor } from '../hooks/useTimeDoctor';
+import type { RAMSRecord } from '../hooks/useRAMS';
+import type { TDRecord } from '../hooks/useTimeDoctor';
 import { getTDNameForRAMS } from '../utils/employeeMap';
 
 export interface FetchPanelHandle {
@@ -12,11 +14,19 @@ export interface FirstArrivalState {
   first: { name: string; firstIn: string } | null;
 }
 
+export interface LeaderboardData {
+  ramsStatus: 'idle' | 'loading' | 'success' | 'error';
+  tdStatus: 'idle' | 'loading' | 'success' | 'error';
+  rams: RAMSRecord[];
+  td: TDRecord[];
+}
+
 interface FetchPanelProps {
   onApply: (entry: { hour: number; minute: number }, td: { hours: number; minutes: number } | null) => void;
   onLoadingChange?: (loading: boolean) => void;
   onMessages?: (messages: string[]) => void;
   onFirstArrival?: (state: FirstArrivalState | null) => void;
+  onLeaderboardData?: (data: LeaderboardData) => void;
 }
 
 function firstInToMinutes(firstIn: string): number {
@@ -27,7 +37,7 @@ function firstInToMinutes(firstIn: string): number {
   return hh * 60 + mm;
 }
 
-export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function FetchPanel({ onApply, onLoadingChange, onMessages, onFirstArrival }, ref) {
+export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function FetchPanel({ onApply, onLoadingChange, onMessages, onFirstArrival, onLeaderboardData }, ref) {
   const rams = useRAMS();
   const td = useTimeDoctor();
   const [fetching, setFetching] = useState(false);
@@ -77,6 +87,16 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
     // idle, or a real error (login/network) → hide banner
     onFirstArrival(null);
   }, [rams.status, rams.records, rams.message, onFirstArrival]);
+
+  // Emit combined records for the Leaderboard view
+  useEffect(() => {
+    onLeaderboardData?.({
+      ramsStatus: rams.status,
+      tdStatus: td.status,
+      rams: rams.records,
+      td: td.records,
+    });
+  }, [rams.status, td.status, rams.records, td.records, onLeaderboardData]);
 
   // ── Single fetch: RAMS + TD in parallel ──
   const handleFetch = async () => {

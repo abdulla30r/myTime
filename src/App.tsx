@@ -8,8 +8,11 @@ import { ProgressBar } from './components/ProgressBar';
 import { FetchPanel } from './components/FetchPanel';
 import { ActivityStats } from './components/ActivityStats';
 import { BreakingNewsTicker } from './components/BreakingNewsTicker';
-import type { FetchPanelHandle, FirstArrivalState } from './components/FetchPanel';
+import { Leaderboard } from './components/Leaderboard';
+import type { FetchPanelHandle, FirstArrivalState, LeaderboardData } from './components/FetchPanel';
 import type { ScheduleMode } from './types/time';
+
+type View = 'home' | 'leaderboard';
 
 function App() {
   const { theme, toggleTheme } = useTheme();
@@ -30,6 +33,8 @@ function App() {
   }, [quoteReset]);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshMessages, setRefreshMessages] = useState<string[]>([]);
+  const [view, setView] = useState<View>('home');
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardData | null>(null);
   const [arrivalState, setArrivalState] = useState<FirstArrivalState | null>({
     status: 'loading',
     first: null,
@@ -142,15 +147,24 @@ function App() {
       {/* ── Top Row: Tab Bar + Theme Toggle ── */}
       <div className="top-row">
         <nav className="tab-bar">
-          {(['regular', 'ramadan'] as ScheduleMode[]).map((m) => (
-            <button
-              key={m}
-              className={`tab-bar__tab${mode === m ? ' tab-bar__tab--active' : ''}`}
-              onClick={() => setMode(m)}
-            >
-              {m === 'regular' ? '📅 Regular' : '🌙 Ramadan'}
-            </button>
-          ))}
+          {(['regular', 'ramadan'] as ScheduleMode[]).map((m) => {
+            const active = view === 'home' && mode === m;
+            return (
+              <button
+                key={m}
+                className={`tab-bar__tab${active ? ' tab-bar__tab--active' : ''}`}
+                onClick={() => { setMode(m); setView('home'); }}
+              >
+                {m === 'regular' ? '📅 Regular' : '🌙 Ramadan'}
+              </button>
+            );
+          })}
+          <button
+            className={`tab-bar__tab${view === 'leaderboard' ? ' tab-bar__tab--active' : ''}`}
+            onClick={() => setView('leaderboard')}
+          >
+            🏆 Leaderboard
+          </button>
         </nav>
         {started && (
           <button
@@ -192,10 +206,13 @@ function App() {
           onMessages={handleRefreshMessage}
           onApply={handleApply}
           onFirstArrival={setArrivalState}
+          onLeaderboardData={setLeaderboardData}
         />
       </div>
 
-      {!started ? (
+      {view === 'leaderboard' ? (
+        <Leaderboard data={leaderboardData} currentEmployee={savedEmployeeName} />
+      ) : !started ? (
         /* ── Setup Screen ── */
         <section className="setup-screen">
           <div className="setup-row">
@@ -347,9 +364,10 @@ function App() {
       )}
 
           {/* ── Activity Stats ── */}
-          {hasTdData.current && <ActivityStats />}
+          {view === 'home' && hasTdData.current && <ActivityStats />}
 
       {/* ── Motivational Quote ── */}
+      {view === 'home' && (
       <div className="quote-card">
         <div className="quote-card__top">
           <h3 className="quote-card__header">বাণী অমৃত</h3>
@@ -373,6 +391,7 @@ function App() {
           <p key={i} className="quote-card__text">{line}</p>
         ))}
       </div>
+      )}
     </div>
   );
 }
