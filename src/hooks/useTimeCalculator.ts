@@ -66,8 +66,8 @@ export function useTimeCalculator() {
   };
 
   const [mode, setModeRaw] = useState<ScheduleMode>(() => {
-    const saved = loadString(LS_MODE, 'ramadan');
-    return (saved === 'regular' || saved === 'ramadan') ? saved : 'ramadan';
+    const saved = loadString(LS_MODE, 'regular');
+    return (saved === 'regular' || saved === 'ramadan') ? saved : 'regular';
   });
   const setMode = (m: ScheduleMode) => { setModeRaw(m); };
   useEffect(() => { try { localStorage.setItem(LS_MODE, mode); } catch { /* ignore */ } }, [mode]);

@@ -68,7 +68,7 @@ export function calculateTimes(
   timeDoctorMinutes: number,
   now: Date = new Date(),
   tdSetAt: number = Date.now(),
-  mode: ScheduleMode = 'ramadan',
+  mode: ScheduleMode = 'regular',
 ): TimeResult {
   const config = SCHEDULE_CONFIGS[mode];
   const REQUIRED_WORK_MINUTES = config.workHours * 60;

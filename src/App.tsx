@@ -30,7 +30,10 @@ function App() {
   }, [quoteReset]);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshMessages, setRefreshMessages] = useState<string[]>([]);
-  const [arrivalState, setArrivalState] = useState<FirstArrivalState | null>(null);
+  const [arrivalState, setArrivalState] = useState<FirstArrivalState | null>({
+    status: 'loading',
+    first: null,
+  });
   const hasTdData = useRef(true); // false when employee has no TD mapping
   const {
     started,

@@ -82,6 +82,17 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes banner-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── Refresh Overlay ── */
 .refresh-overlay {
   position: fixed;
@@ -1826,6 +1837,8 @@
   box-shadow: 0 0 14px rgba(245, 158, 11, 0.12);
   font-family: 'Rajdhani', sans-serif;
   color: var(--text-primary);
+  animation: banner-fade-in 0.5s ease-out;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
 }
 
 .first-arrival-banner--you {
@@ -1864,6 +1877,7 @@
   background: var(--bg-card);
   box-shadow: 0 0 14px rgba(255, 45, 85, 0.12);
   font-family: 'Rajdhani', sans-serif;
+  animation: banner-fade-in 0.5s ease-out;
 }
 
 .breaking-news__label {
@@ -1906,7 +1920,7 @@
   display: inline-flex;
   flex-shrink: 0;
   white-space: nowrap;
-  animation: breaking-news-scroll 35s linear infinite;
+  animation: breaking-news-scroll 5s linear infinite;
   will-change: transform;
 }
 
@@ -1916,7 +1930,7 @@
 
 @keyframes breaking-news-scroll {
   from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  to   { transform: translateX(-33.333%); }
 }
 
 .breaking-news__item {
