@@ -12,6 +12,7 @@ export interface NewsItem {
 // Leave the array empty to hide the ticker entirely.
 export const breakingNews: NewsItem[] = [
   { icon: "📢", text: "ওস্তাদকে ওস্তাদের বউ মারে।" },
+  { icon: "🪦", text: "অহংকার করবেন না" },
 ];
 
 export const quotes: Quote[] = [
@@ -34,6 +35,5 @@ export const quotes: Quote[] = [
   { icon: "👨🏿‍💻", lines: ["Scan the codebase, Find the bugs", "Solve the bugs"] },
   { icon: "👨‍🏭", lines: ["ভালো সফটওয়্যার ডেভেলপার হতে হলে, আগে ভালো মানুষ হন।"] },
   { icon: "👩🏿‍💻", lines: ["সে একজন স্টাফ সফটওয়্যার ইঞ্জিনিয়ার, আর আপনি সাধারণ একজন সফটওয়্যার ইঞ্জিনিয়ার।"] },
-  { icon: "🪦", lines: ["অহংকার করবেন না"] },
 
 ];
