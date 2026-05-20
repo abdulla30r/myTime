@@ -2,11 +2,12 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import './App.css';
 import { useTimeCalculator } from './hooks/useTimeCalculator';
 import { useTheme } from './hooks/useTheme';
-import { quotes } from './assets/data';
+import { quotes, breakingNews } from './assets/data';
 import { ResultCard } from './components/ResultCard';
 import { ProgressBar } from './components/ProgressBar';
 import { FetchPanel } from './components/FetchPanel';
 import { ActivityStats } from './components/ActivityStats';
+import { BreakingNewsTicker } from './components/BreakingNewsTicker';
 import type { FetchPanelHandle, FirstArrivalState } from './components/FetchPanel';
 import type { ScheduleMode } from './types/time';
 
@@ -93,6 +94,9 @@ function App() {
 
   return (
     <div className="app">
+      {/* ── Breaking News Ticker ── */}
+      <BreakingNewsTicker items={breakingNews} />
+
       {/* ── First Arrival Banner ── */}
       {arrivalState?.status === 'loading' && (
         <div className="first-arrival-banner first-arrival-banner--loading">

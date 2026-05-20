@@ -3,6 +3,17 @@ export interface Quote {
   lines: string[];
 }
 
+export interface NewsItem {
+  icon?: string;
+  text: string;
+}
+
+// Add / remove items here to update the top ticker.
+// Leave the array empty to hide the ticker entirely.
+export const breakingNews: NewsItem[] = [
+  { icon: "📢", text: "ওস্তাদকে ওস্তাদের বউ মারে।" },
+];
+
 export const quotes: Quote[] = [
   { icon: "⚔️", lines: ["হয় ভালোভাবে চাকরি করুন", "নইলে চাকরিটা ছেড়ে দিন"] },
   { icon: "🤖", lines: ["সব তো এ-আই করে দেয়"] },

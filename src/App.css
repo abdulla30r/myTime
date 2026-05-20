@@ -1852,6 +1852,102 @@
   color: var(--text-secondary);
 }
 
+/* ── Breaking News Ticker ── */
+.breaking-news {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 45, 85, 0.5);
+  background: var(--bg-card);
+  box-shadow: 0 0 14px rgba(255, 45, 85, 0.12);
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.breaking-news__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  background: linear-gradient(90deg, #ff2d55, #d91440);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.breaking-news__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px #fff;
+  animation: breaking-news-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes breaking-news-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+
+.breaking-news__viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.breaking-news__track {
+  display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
+  animation: breaking-news-scroll 35s linear infinite;
+  will-change: transform;
+}
+
+.breaking-news:hover .breaking-news__track {
+  animation-play-state: paused;
+}
+
+@keyframes breaking-news-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.breaking-news__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.breaking-news__icon {
+  font-size: 1rem;
+}
+
+.breaking-news__sep {
+  color: var(--accent);
+  opacity: 0.6;
+  margin-left: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breaking-news__track {
+    animation: none;
+  }
+  .breaking-news__pulse {
+    animation: none;
+  }
+}
+
 .first-arrival-banner__icon {
   font-size: 1.2rem;
   filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
