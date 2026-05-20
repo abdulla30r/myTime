@@ -2,68 +2,122 @@ import { useState, useCallback } from 'react';
 
 // ── Types ──
 export interface RAMSRecord {
-  name: string;
-  firstIn: string;
+  name: string;     // "Abdullah Rahman (E1042)" — keeps legacy "(id)" suffix
+  firstIn: string;  // "HH:MM" zero-padded
 }
 
 export type RAMSStatus = 'idle' | 'loading' | 'success' | 'error';
 
+// ── localStorage keys ──
 const LS_RAMS_EMPLOYEE = 'myTime_ramsEmployee';
+const LS_RAMS_CACHE = 'myTime_ramsCache';
 
-// ── API paths (proxied by Vite / Apache) ──
-const RAMS_LOGIN_URL = '/rams-api/user/login';
-const RAMS_DATA_URL = '/rams-api/get_first_in_last_out_log2';
+// ── Stellar (Rumy Technologies) JSON API ──
+// Proxied by Vite (and Apache in prod) → https://rumytechnologies.com/rams/json_api
+const STELLAR_API_URL = '/rams-api/json_api';
+const STELLAR_AUTH_USER = 'avianbpo';
+const STELLAR_AUTH_CODE = '16ljku3xef8nh0uqhzvmu392lt7m7t8';
 
-/** Extract CSRF _formkey from RAMS login page HTML */
-function extractFormKey(html: string): string | null {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const input = doc.querySelector<HTMLInputElement>('input[name="_formkey"]');
-  return input?.value ?? null;
+// Vendor blocks IPs that exceed 5 calls in 5 minutes.
+// Browser sessions share this — multi-user office IP can trip it.
+const RATE_LIMIT_MS = 5 * 60 * 1000;
+
+// ── Vendor response shapes ──
+interface StellarLogEntry {
+  unit_name?: string;
+  unit_id?: string;
+  registration_id?: string;
+  registraton_id?: string; // vendor typo — accept both
+  user_name?: string;
+  access_date?: string;
+  access_time?: string;   // NOT zero-padded ("9:47:21")
+  card?: string;
+  access_id?: number;
+}
+
+interface CachedResponse {
+  date: string;       // YYYY-MM-DD
+  fetchedAt: number;  // ms epoch
+  records: RAMSRecord[];
+}
+
+// ── Helpers ──
+function todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** "9:5:3" → "09:05" (drop seconds for display) */
+function padTime(t: string): string {
+  const parts = t.split(':');
+  if (parts.length < 2) return '';
+  const hh = parseInt(parts[0], 10);
+  const mm = parseInt(parts[1], 10);
+  if (isNaN(hh) || isNaN(mm)) return '';
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
+
+function timeToSeconds(t: string): number {
+  const parts = t.split(':');
+  const hh = parseInt(parts[0], 10);
+  const mm = parseInt(parts[1], 10);
+  const ss = parts[2] ? parseInt(parts[2], 10) : 0;
+  if (isNaN(hh) || isNaN(mm)) return Number.POSITIVE_INFINITY;
+  return hh * 3600 + mm * 60 + (isNaN(ss) ? 0 : ss);
+}
+
+function loadCache(): CachedResponse | null {
+  try {
+    const raw = localStorage.getItem(LS_RAMS_CACHE);
+    if (!raw) return null;
+    return JSON.parse(raw) as CachedResponse;
+  } catch { return null; }
+}
+
+function saveCache(c: CachedResponse): void {
+  try { localStorage.setItem(LS_RAMS_CACHE, JSON.stringify(c)); } catch { /* ignore */ }
 }
 
 /**
- * Parse RAMS attendance HTML table.
- * Columns: [0] expand | [1] Name | [2] Phone | [3] Dept
- *          [4] Date | [5] In Device | [6] First In | [7] Out Device
- *          [8] Last Out | [9] ? | [10] Duration
+ * Aggregate raw punches → one earliest-punch record per employee.
+ * Mirrors `pair_punches_to_checkin_checkout` from the server doc, but only
+ * keeps the first check-in (we don't surface check-out here).
  */
-function parseRAMSTable(html: string): RAMSRecord[] {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const rows = doc.querySelectorAll('table tbody tr');
-  const records: RAMSRecord[] = [];
-  const seen = new Set<string>();
+function pairFirstIn(logs: StellarLogEntry[]): RAMSRecord[] {
+  type Acc = { name: string; regId: string; bestTime: string; bestSecs: number };
+  const groups = new Map<string, Acc>();
 
-  rows.forEach((row) => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 7) {
-      const name = cells[1]?.textContent?.trim() ?? '';
-      const firstIn = cells[6]?.textContent?.trim() ?? '';
+  for (const entry of logs) {
+    const regId = entry.registration_id ?? entry.registraton_id ?? '';
+    const userName = entry.user_name ?? '';
+    const accessTime = entry.access_time ?? '';
+    if (!regId || !userName || !accessTime) continue;
 
-      if (
-        name &&
-        firstIn &&
-        firstIn !== '-' &&
-        /^\d{1,2}:\d{2}(:\d{2})?$/.test(firstIn) &&
-        !seen.has(name)
-      ) {
-        seen.add(name);
-        records.push({ name, firstIn });
-      }
+    const secs = timeToSeconds(accessTime);
+    const existing = groups.get(regId);
+    if (!existing) {
+      groups.set(regId, { name: userName, regId, bestTime: accessTime, bestSecs: secs });
+    } else if (secs < existing.bestSecs) {
+      existing.bestTime = accessTime;
+      existing.bestSecs = secs;
     }
-  });
+  }
 
+  const records: RAMSRecord[] = [];
+  for (const g of groups.values()) {
+    const firstIn = padTime(g.bestTime);
+    if (!firstIn) continue;
+    records.push({ name: `${g.name} (${g.regId})`, firstIn });
+  }
+  records.sort((a, b) => timeToSeconds(a.firstIn) - timeToSeconds(b.firstIn));
   return records;
 }
 
+// ── Hook ──
 export function useRAMS() {
-  const [username] = useState('avianbpo');
-  const [password] = useState('password123');
   const [status, setStatus] = useState<RAMSStatus>('idle');
   const [message, setMessage] = useState('');
   const [records, setRecords] = useState<RAMSRecord[]>([]);
-  const [selectedTime, setSelectedTime] = useState('');
   const [savedEmployee, setSavedEmployee] = useState<string>(() => {
     try { return localStorage.getItem(LS_RAMS_EMPLOYEE) ?? ''; } catch { return ''; }
   });
@@ -79,112 +133,119 @@ export function useRAMS() {
     setSavedEmployee('');
   };
 
-  const fetchAttendance = useCallback(async (onAutoApply?: (h: number, m: number) => void) => {
-    if (!username.trim() || !password.trim()) {
-      setStatus('error');
-      setMessage('Please enter both username and password.');
+  const fetchAttendance = useCallback(async () => {
+    const today = todayStr();
+    const cached = loadCache();
+    const cacheFresh =
+      cached !== null &&
+      cached.date === today &&
+      Date.now() - cached.fetchedAt < RATE_LIMIT_MS;
+
+    // Serve from cache within the 5-min window — this is what keeps us under
+    // the vendor's per-IP rate limit on quick reloads.
+    if (cacheFresh && cached) {
+      setRecords(cached.records);
+      setStatus('success');
+      setMessage(`Loaded ${cached.records.length} records (cached).`);
       return;
     }
 
     setStatus('loading');
-    setMessage('Connecting to RAMS...');
-    setRecords([]);
-    setSelectedTime('');
+    setMessage('Fetching attendance...');
 
     try {
-      // Step 1: GET login page for CSRF token
-      const loginPageRes = await fetch(RAMS_LOGIN_URL);
-      if (!loginPageRes.ok) throw new Error(`Could not reach RAMS (HTTP ${loginPageRes.status})`);
-
-      const loginHtml = await loginPageRes.text();
-      const formKey = extractFormKey(loginHtml);
-      if (!formKey) throw new Error('Could not extract login token.');
-
-      setMessage('Logging in...');
-
-      // Step 2: POST login
-      const body = new URLSearchParams({
-        username: username.trim(),
-        password: password.trim(),
-        _next: '/rams/get_first_in_last_out_log2',
-        _formkey: formKey,
-        _formname: 'login',
-      });
-
-      const loginRes = await fetch(RAMS_LOGIN_URL, {
+      const res = await fetch(STELLAR_API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-        redirect: 'follow',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operation: 'fetch_log',
+          auth_user: STELLAR_AUTH_USER,
+          auth_code: STELLAR_AUTH_CODE,
+          start_date: today,
+          end_date: today,
+          start_time: '00:00:00',
+          end_time: '23:59:59',
+        }),
       });
 
-      const resultHtml = await loginRes.text();
-
-      if (resultHtml.includes('Invalid login') || resultHtml.includes('invalid credentials')) {
+      if (!res.ok) {
+        // On vendor error, prefer stale-but-today cache over an empty UI
+        if (cached && cached.date === today) {
+          setRecords(cached.records);
+          setStatus('success');
+          setMessage(`Vendor HTTP ${res.status} — using cached data.`);
+          return;
+        }
         setStatus('error');
-        setMessage('Invalid username or password.');
+        setMessage(`Vendor returned HTTP ${res.status}.`);
         return;
       }
 
-      // Try parsing from redirect response
-      let parsed = parseRAMSTable(resultHtml);
-
-      // If empty, fetch data page explicitly
-      if (parsed.length === 0) {
-        setMessage('Fetching attendance data...');
-        const dataRes = await fetch(RAMS_DATA_URL);
-        if (!dataRes.ok) throw new Error(`Could not fetch attendance data (HTTP ${dataRes.status})`);
-        const dataHtml = await dataRes.text();
-
-        if (dataHtml.includes('name="_formname" value="login"')) {
-          throw new Error('Session expired. Please try again.');
-        }
-        parsed = parseRAMSTable(dataHtml);
+      let data: any;
+      try { data = await res.json(); }
+      catch {
+        setStatus('error');
+        setMessage('Invalid JSON from vendor.');
+        return;
       }
 
+      // Vendor sometimes returns a JSON-encoded string on bad input
+      if (typeof data === 'string') {
+        setStatus('error');
+        setMessage(`Vendor: ${data}`);
+        return;
+      }
+
+      if (data?.error) {
+        setStatus('error');
+        setMessage(`Vendor: ${String(data.error)}`);
+        return;
+      }
+
+      const logs: StellarLogEntry[] = Array.isArray(data?.log) ? data.log : [];
+      const parsed = pairFirstIn(logs);
+
       if (parsed.length === 0) {
+        setRecords([]);
         setStatus('error');
         setMessage('No attendance records with First-In time found for today.');
         return;
       }
 
       setRecords(parsed);
+      saveCache({ date: today, fetchedAt: Date.now(), records: parsed });
 
-      // If we have a saved employee, auto-match and signal auto-apply
       if (savedEmployee) {
         const match = parsed.find((r) => r.name === savedEmployee);
         if (match) {
-          const parts = match.firstIn.split(':');
-          const h = parseInt(parts[0], 10);
-          const m = parseInt(parts[1], 10);
-          if (!isNaN(h) && !isNaN(m)) {
-            if (onAutoApply) onAutoApply(h, m);
-            setStatus('success');
-            setMessage(`${match.name} — ${match.firstIn}`);
-            return;
-          }
+          setStatus('success');
+          setMessage(`${match.name} — ${match.firstIn}`);
+          return;
         }
-        // Saved name not found today — fall back to dropdown
         setStatus('success');
-        setMessage(`Saved employee not found today. Select below.`);
+        setMessage('Saved employee not found today. Select below.');
         return;
       }
 
       setStatus('success');
       setMessage(`Found ${parsed.length} records. Select your name.`);
     } catch (err) {
-      console.error('RAMS fetch error:', err);
+      // Network failure — fall back to today's cache if we have any
+      if (cached && cached.date === today) {
+        setRecords(cached.records);
+        setStatus('success');
+        setMessage('Network error — using cached data.');
+        return;
+      }
       setStatus('error');
       setMessage(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
-  }, [username, password]);
+  }, [savedEmployee]);
 
   return {
     status,
     message,
     records,
-    selectedTime,
-    setSelectedTime,
     fetchAttendance,
     hasSavedEmployee,
     savedEmployee,
