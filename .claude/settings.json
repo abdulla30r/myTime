@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(git stash *)",
+      "WebSearch",
+      "WebFetch(domain:en.wikipedia.org)",
+      "PowerShell(npm run build 2>&1)",
+      "PowerShell(npx eslint src/hooks/useActivityLeaderboard.ts src/components/FetchPanel.tsx 2>&1)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_console_messages",
+      "Read(//c/Users/Avian/.claude/projects/c--Users-Avian-Documents-TC-myTime/memory/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Avian\\.claude\\projects\\c--Users-Avian-Documents-TC-myTime\\memory"
+    ]
+  }
+}

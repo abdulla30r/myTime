@@ -96,6 +96,46 @@ app.use(
   }),
 );
 
+// ── World Cup 2026: football-data.org proxy ──
+// Injects X-Auth-Token from FD_TOKEN env when present; otherwise forwards the
+// token the client pasted in Settings (kept out of the JS bundle either way).
+app.use(
+  createProxyMiddleware({
+    target: 'https://api.football-data.org',
+    pathFilter: '/football-api',
+    changeOrigin: true,
+    pathRewrite: { '^/football-api': '/v4' },
+    secure: true,
+    on: {
+      proxyReq: (proxyReq) => {
+        if (process.env.FD_TOKEN) proxyReq.setHeader('X-Auth-Token', process.env.FD_TOKEN);
+      },
+      proxyRes: (proxyRes) => {
+        proxyRes.headers['access-control-allow-origin'] = '*';
+      },
+    },
+  }),
+);
+
+// ── World Cup 2026: API-Football proxy (events / MOTM) ──
+app.use(
+  createProxyMiddleware({
+    target: 'https://v3.football.api-sports.io',
+    pathFilter: '/apifootball-api',
+    changeOrigin: true,
+    pathRewrite: { '^/apifootball-api': '' },
+    secure: true,
+    on: {
+      proxyReq: (proxyReq) => {
+        if (process.env.APIFOOTBALL_KEY) proxyReq.setHeader('x-apisports-key', process.env.APIFOOTBALL_KEY);
+      },
+      proxyRes: (proxyRes) => {
+        proxyRes.headers['access-control-allow-origin'] = '*';
+      },
+    },
+  }),
+);
+
 // ── Serve static build ──
 app.use(express.static(join(__dirname, 'dist')));
 

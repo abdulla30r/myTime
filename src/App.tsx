@@ -9,10 +9,11 @@ import { FetchPanel } from './components/FetchPanel';
 import { ActivityStats } from './components/ActivityStats';
 import { BreakingNewsTicker } from './components/BreakingNewsTicker';
 import { Leaderboard } from './components/Leaderboard';
+import { WorldCupTab } from './worldcup/components/WorldCupTab';
 import type { FetchPanelHandle, FirstArrivalState, LeaderboardData } from './components/FetchPanel';
 import type { ScheduleMode } from './types/time';
 
-type View = 'home' | 'leaderboard';
+type View = 'home' | 'leaderboard' | 'worldcup';
 
 function App() {
   const { theme, toggleTheme } = useTheme();
@@ -168,6 +169,12 @@ function App() {
           >
             🏆 Leaderboard
           </button>
+          <button
+            className={`tab-bar__tab${view === 'worldcup' ? ' tab-bar__tab--active' : ''}`}
+            onClick={() => setView('worldcup')}
+          >
+            ⚽ World Cup
+          </button>
         </nav>
         {started && (
           <button
@@ -202,7 +209,7 @@ function App() {
       </div>
 
       {/* FetchPanel always mounted so refresh ref works from countdown screen */}
-      <div style={started ? { position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' } : undefined}>
+      <div style={started || view !== 'home' ? { position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' } : undefined}>
         <FetchPanel
           ref={fetchPanelRef}
           onLoadingChange={setRefreshing}
@@ -213,7 +220,9 @@ function App() {
         />
       </div>
 
-      {view === 'leaderboard' ? (
+      {view === 'worldcup' ? (
+        <WorldCupTab />
+      ) : view === 'leaderboard' ? (
         <Leaderboard data={leaderboardData} currentEmployee={savedEmployeeName} />
       ) : !started ? (
         /* ── Setup Screen ── */
