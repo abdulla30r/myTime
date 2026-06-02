@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 // ── Types ──
 export interface RAMSRecord {
   name: string;     // "Abdullah Rahman (E1042)" — keeps legacy "(id)" suffix
-  firstIn: string;  // "HH:MM" zero-padded
+  firstIn: string;  // "HH:MM:SS" zero-padded
 }
 
 export type RAMSStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -47,14 +47,15 @@ function todayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** "9:5:3" → "09:05" (drop seconds for display) */
+/** "9:5:3" → "09:05:03" (zero-pad H:M:S, seconds default to 0) */
 function padTime(t: string): string {
   const parts = t.split(':');
   if (parts.length < 2) return '';
   const hh = parseInt(parts[0], 10);
   const mm = parseInt(parts[1], 10);
+  const ss = parts[2] !== undefined ? parseInt(parts[2], 10) : 0;
   if (isNaN(hh) || isNaN(mm)) return '';
-  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(isNaN(ss) ? 0 : ss).padStart(2, '0')}`;
 }
 
 function timeToSeconds(t: string): number {

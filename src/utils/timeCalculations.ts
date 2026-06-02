@@ -11,6 +11,12 @@ export function timeStringToMinutes(time: string): number {
   return h * 60 + m;
 }
 
+/** Convert "HH:MM" or "HH:MM:SS" string to total seconds since midnight */
+export function timeStringToSeconds(time: string): number {
+  const [h, m, s] = time.split(':').map(Number);
+  return h * 3600 + m * 60 + (s || 0);
+}
+
 /** Convert total minutes to TimeDuration (no seconds) */
 export function minutesToDuration(totalMinutes: number): TimeDuration {
   const clamped = Math.max(0, totalMinutes);
@@ -47,13 +53,15 @@ export function formatElapsed(totalSeconds: number): string {
   return `${d.hours}h ${d.minutes.toString().padStart(2, '0')}m ${d.seconds.toString().padStart(2, '0')}s`;
 }
 
-/** Format minutes-since-midnight to "HH:MM AM/PM" */
+/** Format minutes-since-midnight to "HH:MM:SS AM/PM" */
 export function minutesToTimeString(totalMinutes: number): string {
-  const h24 = Math.floor(totalMinutes / 60) % 24;
-  const m = Math.round(totalMinutes % 60);
+  const totalSeconds = Math.round(totalMinutes * 60);
+  const h24 = Math.floor(totalSeconds / 3600) % 24;
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
   const period = h24 >= 12 ? 'PM' : 'AM';
   const h12 = h24 % 12 || 12;
-  return `${h12}:${m.toString().padStart(2, '0')} ${period}`;
+  return `${h12}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${period}`;
 }
 
 /** Convert "HH:MM" time-doctor tracked time to total minutes */
@@ -69,6 +77,7 @@ export function calculateTimes(
   now: Date = new Date(),
   tdSetAt: number = Date.now(),
   mode: ScheduleMode = 'regular',
+  timeDoctorSeconds: number = 0,
 ): TimeResult {
   const config = SCHEDULE_CONFIGS[mode];
   const REQUIRED_WORK_MINUTES = config.workHours * 60;
@@ -78,17 +87,18 @@ export function calculateTimes(
   const nowSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
   // Time Doctor: base input + seconds elapsed since last set
-  const baseWorkedSeconds = timeDoctorToMinutes(timeDoctorHours, timeDoctorMinutes) * 60;
+  const baseWorkedSeconds =
+    timeDoctorToMinutes(timeDoctorHours, timeDoctorMinutes) * 60 + timeDoctorSeconds;
   const elapsedSinceSet = Math.max(0, Math.floor((now.getTime() - tdSetAt) / 1000));
   const workedSeconds = baseWorkedSeconds + elapsedSinceSet;
 
   // 1. Time Doctor remaining (seconds-level)
   const tdRemainingSec = REQUIRED_WORK_MINUTES * 60 - workedSeconds;
 
-  // 2. Entry-based leave time
-  const entryMinutes = timeStringToMinutes(entryTimeStr);
-  const canLeaveAtMin = entryMinutes + REQUIRED_STAY_MINUTES;
-  const stayRemainingSec = canLeaveAtMin * 60 - nowSeconds;
+  // 2. Entry-based leave time (second-precision: entry time may carry "HH:MM:SS")
+  const entrySeconds = timeStringToSeconds(entryTimeStr);
+  const canLeaveAtSec = entrySeconds + REQUIRED_STAY_MINUTES * 60;
+  const stayRemainingSec = canLeaveAtSec - nowSeconds;
 
   // 3. Which constraint is bigger?
   const drivingConstraint: 'timeDoctor' | 'entry' =
@@ -101,7 +111,7 @@ export function calculateTimes(
 
   // 5. Effective stay remaining = stay + extra time (if TD exceeds stay)
   const effectiveStayRemainingSec = stayRemainingSec + extraTimeSec;
-  const effectiveCanLeaveAtMin = canLeaveAtMin + (extraTimeSec / 60);
+  const effectiveCanLeaveAtSec = canLeaveAtSec + extraTimeSec;
 
   // 6. Free time = how much office stay time is NOT consumed by Time Doctor work
   const freeTimeSec = stayRemainingSec - tdRemainingSec;
@@ -114,16 +124,16 @@ export function calculateTimes(
 
   return {
     timeDoctorRemaining: secondsToDuration(tdRemainingSec),
-    canLeaveAt: minutesToTimeString(canLeaveAtMin),
+    canLeaveAt: minutesToTimeString(canLeaveAtSec / 60),
     stayRemaining: secondsToDuration(stayRemainingSec),
     extraTimeRequired: secondsToDuration(extraTimeSec),
     effectiveStayRemaining: secondsToDuration(effectiveStayRemainingSec),
-    effectiveCanLeaveAt: minutesToTimeString(effectiveCanLeaveAtMin),
+    effectiveCanLeaveAt: minutesToTimeString(effectiveCanLeaveAtSec / 60),
     drivingConstraint,
     freeTime: secondsToDuration(freeTimeSec),
     progressPercent: Math.round(progressPercent),
     /** Seconds elapsed since entry */
-    entryElapsedSeconds: Math.max(0, nowSeconds - entryMinutes * 60),
+    entryElapsedSeconds: Math.max(0, nowSeconds - entrySeconds),
     /** Total seconds Time Doctor has tracked */
     tdTrackedSeconds: workedSeconds,
   };

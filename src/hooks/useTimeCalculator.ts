@@ -5,6 +5,7 @@ import type { TimeResult, ScheduleMode } from '../types/time';
 const LS_ENTRY = 'myTime_entryTime';
 const LS_TD_H = 'myTime_tdHours';
 const LS_TD_M = 'myTime_tdMinutes';
+const LS_TD_S = 'myTime_tdSeconds';
 const LS_TD_SET_AT = 'myTime_tdSetAt';
 const LS_MODE = 'myTime_mode';
 const LS_STARTED = 'myTime_started';
@@ -12,10 +13,10 @@ const LS_STARTED_AT = 'myTime_startedAt';
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
-/** Get current time as "HH:MM" for default entry time */
+/** Get current time as "HH:MM:SS" for default entry time */
 function currentTimeString(): string {
   const now = new Date();
-  return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 }
 
 function loadString(key: string, fallback: string): string {
@@ -76,37 +77,41 @@ export function useTimeCalculator() {
 
   const [entryTime, setEntryTimeRaw] = useState<string>(() => loadString(LS_ENTRY, currentTimeString()));
 
-  // Derived entry hour/minute for custom inputs
+  // Derived entry hour/minute/second for custom inputs
   const entryHour = parseInt(entryTime.split(':')[0] || '0', 10);
   const entryMinute = parseInt(entryTime.split(':')[1] || '0', 10);
+  const entrySecond = parseInt(entryTime.split(':')[2] || '0', 10);
   const setEntryHour = (h: number) => {
     const clamped = Math.max(0, Math.min(23, h));
     setEntryTimeRaw((prev) => {
-      const prevMin = parseInt(prev.split(':')[1] || '0', 10);
-      return `${clamped.toString().padStart(2, '0')}:${prevMin.toString().padStart(2, '0')}`;
+      const [, pm = '0', ps = '0'] = prev.split(':');
+      return `${clamped.toString().padStart(2, '0')}:${(parseInt(pm, 10) || 0).toString().padStart(2, '0')}:${(parseInt(ps, 10) || 0).toString().padStart(2, '0')}`;
     });
   };
   const setEntryMinute = (m: number) => {
     const clamped = Math.max(0, Math.min(59, m));
     setEntryTimeRaw((prev) => {
-      const prevHour = parseInt(prev.split(':')[0] || '0', 10);
-      return `${prevHour.toString().padStart(2, '0')}:${clamped.toString().padStart(2, '0')}`;
+      const [ph = '0', , ps = '0'] = prev.split(':');
+      return `${(parseInt(ph, 10) || 0).toString().padStart(2, '0')}:${clamped.toString().padStart(2, '0')}:${(parseInt(ps, 10) || 0).toString().padStart(2, '0')}`;
     });
   };
   const setEntryTime = setEntryTimeRaw;
 
   const [tdHours, setTdHoursRaw] = useState<number>(() => loadNumber(LS_TD_H, 0));
   const [tdMinutes, setTdMinutesRaw] = useState<number>(() => loadNumber(LS_TD_M, 0));
+  const [tdSeconds, setTdSecondsRaw] = useState<number>(() => loadNumber(LS_TD_S, 0));
   const [tdSetAt, setTdSetAt] = useState<number>(() => loadNumber(LS_TD_SET_AT, Date.now()));
 
   // Wrap setters so they also record the timestamp
   const setTdHours = (v: number) => { setTdHoursRaw(v); setTdSetAt(Date.now()); };
   const setTdMinutes = (v: number) => { setTdMinutesRaw(v); setTdSetAt(Date.now()); };
+  const setTdSeconds = (v: number) => { setTdSecondsRaw(v); setTdSetAt(Date.now()); };
 
   // Persist to localStorage on change
   useEffect(() => { try { localStorage.setItem(LS_ENTRY, entryTime); } catch { /* ignore */ } }, [entryTime]);
   useEffect(() => { try { localStorage.setItem(LS_TD_H, String(tdHours)); } catch { /* ignore */ } }, [tdHours]);
   useEffect(() => { try { localStorage.setItem(LS_TD_M, String(tdMinutes)); } catch { /* ignore */ } }, [tdMinutes]);
+  useEffect(() => { try { localStorage.setItem(LS_TD_S, String(tdSeconds)); } catch { /* ignore */ } }, [tdSeconds]);
   useEffect(() => { try { localStorage.setItem(LS_TD_SET_AT, String(tdSetAt)); } catch { /* ignore */ } }, [tdSetAt]);
   const [now, setNow] = useState<Date>(new Date());
   const [editingEntry, setEditingEntry] = useState(false);
@@ -126,8 +131,8 @@ export function useTimeCalculator() {
   });
 
   const result: TimeResult = useMemo(
-    () => calculateTimes(entryTime, tdHours, tdMinutes, now, tdSetAt, mode),
-    [entryTime, tdHours, tdMinutes, now, tdSetAt, mode],
+    () => calculateTimes(entryTime, tdHours, tdMinutes, now, tdSetAt, mode, tdSeconds),
+    [entryTime, tdHours, tdMinutes, now, tdSetAt, mode, tdSeconds],
   );
 
   const entryElapsedStr = formatElapsed(result.entryElapsedSeconds);
@@ -146,6 +151,7 @@ export function useTimeCalculator() {
     config,
     entryHour,
     entryMinute,
+    entrySecond,
     setEntryHour,
     setEntryMinute,
     entryTime,
@@ -154,6 +160,8 @@ export function useTimeCalculator() {
     setTdHours,
     tdMinutes,
     setTdMinutes,
+    tdSeconds,
+    setTdSeconds,
     result,
     clock,
     editingEntry,

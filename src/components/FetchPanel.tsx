@@ -22,7 +22,7 @@ export interface LeaderboardData {
 }
 
 interface FetchPanelProps {
-  onApply: (entry: { hour: number; minute: number }, td: { hours: number; minutes: number } | null) => void;
+  onApply: (entry: { hour: number; minute: number; second: number }, td: { hours: number; minutes: number; seconds: number } | null) => void;
   onLoadingChange?: (loading: boolean) => void;
   onMessages?: (messages: string[]) => void;
   onFirstArrival?: (state: FirstArrivalState | null) => void;
@@ -151,10 +151,11 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
     const ramsRecord = rams.records.find((r) => r.name === ramsName);
     if (!ramsRecord) return;
 
-    // Parse RAMS entry time
+    // Parse RAMS entry time (firstIn is "HH:MM:SS")
     const parts = ramsRecord.firstIn.split(':');
     const h = parseInt(parts[0], 10);
     const m = parseInt(parts[1], 10);
+    const s = parseInt(parts[2] ?? '0', 10) || 0;
     if (isNaN(h) || isNaN(m)) return;
 
     // Save RAMS employee
@@ -162,7 +163,7 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
 
     // Look up TD via map
     const tdName = getTDNameForRAMS(ramsName);
-    let tdData: { hours: number; minutes: number } | null = null;
+    let tdData: { hours: number; minutes: number; seconds: number } | null = null;
 
     // Clear any previous TD userId
     try { localStorage.removeItem('myTime_tdSelectedUserId'); } catch { /* */ }
@@ -176,10 +177,11 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
         tdData = {
           hours: Math.floor(tdRecord.seconds / 3600),
           minutes: Math.floor((tdRecord.seconds % 3600) / 60),
+          seconds: tdRecord.seconds % 60,
         };
       } else {
         // Has TD mapping but no tracked time today
-        tdData = { hours: 0, minutes: 0 };
+        tdData = { hours: 0, minutes: 0, seconds: 0 };
       }
       // Save the matched TD userId for activity stats
       if (tdRecord) {
@@ -188,7 +190,7 @@ export const FetchPanel = forwardRef<FetchPanelHandle, FetchPanelProps>(function
     }
     // tdData stays null if no TD mapping → N/A
 
-    onApply({ hour: h, minute: m }, tdData);
+    onApply({ hour: h, minute: m, second: s }, tdData);
   };
 
   // Build dropdown items with TD info

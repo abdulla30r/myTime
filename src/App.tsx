@@ -47,13 +47,15 @@ function App() {
     setMode,
     entryHour,
     entryMinute,
-    setEntryHour,
-    setEntryMinute,
+    entrySecond,
+    setEntryTime,
     entryTime,
     tdHours,
     setTdHours,
     tdMinutes,
     setTdMinutes,
+    tdSeconds,
+    setTdSeconds,
     result,
     clock,
     entryElapsedStr,
@@ -64,12 +66,13 @@ function App() {
     freeTimeCountdown,
   } = useTimeCalculator();
 
-  const handleApply = useCallback((entry: { hour: number; minute: number }, td: { hours: number; minutes: number } | null) => {
-    setEntryHour(entry.hour);
-    setEntryMinute(entry.minute);
+  const handleApply = useCallback((entry: { hour: number; minute: number; second: number }, td: { hours: number; minutes: number; seconds: number } | null) => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    setEntryTime(`${pad(entry.hour)}:${pad(entry.minute)}:${pad(entry.second)}`);
     if (td) {
       setTdHours(td.hours);
       setTdMinutes(td.minutes);
+      setTdSeconds(td.seconds);
       hasTdData.current = true;
     } else {
       hasTdData.current = false;
@@ -223,7 +226,7 @@ function App() {
                 <span className="setup-card__label">Entry Time</span>
               </div>
               <div className="setup-card__value">
-                {entryHour.toString().padStart(2, '0')}:{entryMinute.toString().padStart(2, '0')}
+                {entryHour.toString().padStart(2, '0')}:{entryMinute.toString().padStart(2, '0')}:{entrySecond.toString().padStart(2, '0')}
               </div>
             </div>
 
@@ -235,7 +238,7 @@ function App() {
               </div>
               <div className="setup-card__value">
                 {hasTdData.current
-                  ? `${tdHours.toString().padStart(2, '0')}:${tdMinutes.toString().padStart(2, '0')}`
+                  ? `${tdHours.toString().padStart(2, '0')}:${tdMinutes.toString().padStart(2, '0')}:${tdSeconds.toString().padStart(2, '0')}`
                   : 'N/A'}
               </div>
             </div>
@@ -269,7 +272,7 @@ function App() {
                   <>
                     <span className="input-card__time">{tdTrackedStr}</span>
                     <span className="input-card__countdown">⏳ {tdRemainingCountdown} left</span>
-                    <span className="input-card__sub">set: {tdHours}h {tdMinutes}m</span>
+                    <span className="input-card__sub">set: {tdHours}h {tdMinutes}m {tdSeconds}s</span>
                   </>
                 ) : (
                   <span className="input-card__time input-card__na">N/A</span>
